@@ -63,4 +63,5 @@ SOURCE := \
     SamplePicture.cpp \
     SampleLineClipper.cpp \
     SampleRegion.cpp \
-    SampleDecode.cpp 
+    SampleDecode.cpp \
+    SampleTextBox.cpp

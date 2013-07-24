@@ -40,6 +40,7 @@ LOCAL_C_INCLUDES := \
     external/skia/include/gpu \
     external/skia/src/core \
     external/skia/gpu/include \
+    external/skia/include/animator \
     frameworks/base/core/jni/android/graphics \
     frameworks/base/native/include/android \
     frameworks/native/services/surfaceflinger \
@@ -60,7 +61,7 @@ LOCAL_SRC_FILES += $(addprefix ../../external/skia/src/pdf/, $(SOURCE))
 include external/skia/src/xml/xml_files.mk
 LOCAL_SRC_FILES += $(addprefix ../../external/skia/src/xml/, $(SOURCE))
 
-include external/skia/samplecode/samplecode_files.mk
+include $(LOCAL_PATH)/SkiaSamples/samplecode_files.mk
 LOCAL_SRC_FILES += $(addprefix SkiaSamples/, $(SOURCE))
 
 include $(BUILD_EXECUTABLE)
