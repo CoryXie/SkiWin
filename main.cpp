@@ -38,7 +38,6 @@
 #include <SkEvent.h>
 #include <SkCanvas.h>
 #include <SkWindow.h>
-#include <SkApplication.h>
 #include <SkBitmap.h>
 #include <SkStream.h>
 #include <SkImageDecoder.h>
@@ -66,7 +65,7 @@ void SkEvent::SignalNonEmptyQueue() {}
 
 void SkOSWindow::onSetTitle(const char title[])
 {
-
+printf("View Title %s\n", title);
 }
 
 void SkOSWindow::onHandleInval(const SkIRect& rect)

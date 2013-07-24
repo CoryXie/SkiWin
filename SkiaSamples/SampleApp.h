@@ -194,4 +194,10 @@ private:
     typedef SkOSWindow INHERITED;
 };
 
+extern SkOSWindow* create_sk_window(void* hwnd, int argc, char** argv);
+extern void application_init();
+extern void application_term();
+extern void loadSample(SkOSWindow* win, int i);
+extern int getSampleCount(SkOSWindow* win);
+
 #endif

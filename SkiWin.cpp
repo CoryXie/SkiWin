@@ -276,6 +276,9 @@ bool SkiWin::android()
     const nsecs_t startTime = systemTime();
     Rect rect(mWidth, mHeight);
     gWindow->resize(mWidth, mHeight);
+    int numViews = getSampleCount(gWindow);
+    int i = 0;
+    int index = 0;
     do {
         nsecs_t now = systemTime();
         double time = now - startTime;
@@ -286,6 +289,10 @@ bool SkiWin::android()
 	processEvent(event);
 
 	SkCanvas* canvas = lockCanvas(rect);
+
+	index = i%numViews;
+    	i++;
+    	loadSample(gWindow, index);
 
     	gWindow->update(NULL);
 
