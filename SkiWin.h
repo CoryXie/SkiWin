@@ -39,6 +39,8 @@
 #include <SkBitmap.h>
 #include <SkRegion.h>
 
+#include "SkiWinInputEventSink.h"
+
 class SkBitmap;
 class SkCanvas;
 
@@ -48,16 +50,18 @@ class Surface;
 class SurfaceComposerClient;
 class SurfaceControl;
 
+#define USE_RAW_EVENT_HUB
 // ---------------------------------------------------------------------------
 
-class SkiWin : public Thread, public IBinder::DeathRecipient
+class SkiWin : public Thread, public IBinder::DeathRecipient, public SkiWinInputEventSink
 {
 public:
                 SkiWin();
     virtual     ~SkiWin();
 
     sp<SurfaceComposerClient> session() const;
-
+    
+#ifdef USE_RAW_EVENT_HUB
 struct TouchEvent {
 		enum TouchEventType {
 			Down, Up, Moving
@@ -66,15 +70,23 @@ struct TouchEvent {
 		int32_t y;
 		enum TouchEventType type;
 	};
+#endif /* USE_RAW_EVENT_HUB */
+
 private:
     virtual bool        threadLoop();
     virtual status_t    readyToRun();
     virtual void        onFirstRef();
     virtual void        binderDied(const wp<IBinder>& who);
- 
+
+#ifndef USE_RAW_EVENT_HUB
+	bool dispatchBatchedInputEventPending(); 
+	bool dispatchInputEvent(int seq, KeyEvent* event);
+	bool dispatchInputEvent(int seq, MotionEvent* event); 
+#else    
     void processEvent(const RawEvent& rawEvent);
     void consumeEvent(const RawEvent& rawEvent);
     void printTouchEventType();
+#endif /* USE_RAW_EVENT_HUB */
 
     SkBitmap::Config convertPixelFormat(PixelFormat format);
     SkCanvas* lockCanvas(const Rect& dirtyRect);
@@ -91,10 +103,19 @@ private:
    
     sp<SurfaceControl> mFlingerSurfaceControl;
     sp<Surface> mFlingerSurface;
+
+#ifdef USE_RAW_EVENT_HUB
     sp<EventHub> mEventHub;
     bool waiting;
     TouchEvent mTouchEvent;
     List<TouchEvent> eventBuffer;
+#else
+    sp<InputChannel> serverChannel, clientChannel;
+    InputPublisher* mPublisher;
+    InputConsumer* mConsumer;
+    PreallocatedInputEventFactory mEventFactory;
+    sp<MessageQueue> mMessageQueue;
+#endif /* USE_RAW_EVENT_HUB */
 
     SkCanvas canvas;
     int saveCount;

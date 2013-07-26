@@ -116,14 +116,23 @@ status_t SkiWin::readyToRun() {
     control->setLayer(0x40000000);
     SurfaceComposerClient::closeGlobalTransaction();
 
-    sp<Surface> s = control->getSurface();
+    sp<Surface> surface = control->getSurface();
 
- 
     mWidth = dinfo.w;
     mHeight = dinfo.h;
     mFlingerSurfaceControl = control;
-    mFlingerSurface = s;
+    mFlingerSurface = surface;
 
+#ifndef USE_RAW_EVENT_HUB
+	status_t result = InputChannel::openInputChannelPair(String8("channel name"),
+			serverChannel, clientChannel);
+	
+	mPublisher = new InputPublisher(serverChannel);
+	mConsumer = new InputConsumer(clientChannel);
+	sp<MessageQueue> mMessageQueue = new MessageQueue();
+	SkiWinInputEventReceiverInit(this, mConsumer, );
+
+#endif /* */
     return NO_ERROR;
 }
 
@@ -142,6 +151,8 @@ bool SkiWin::threadLoop()
     IPCThreadState::self()->stopProcess();
     return r;
 }
+
+#ifdef USE_RAW_EVENT_HUB
 
 void SkiWin::processEvent(const RawEvent& rawEvent) {
 	String8 name = mEventHub->getDeviceIdentifier(rawEvent.deviceId).name;
@@ -213,6 +224,27 @@ void SkiWin::printTouchEventType() {
 		break;
 	}
 }
+#else
+bool SkiWin::dispatchBatchedInputEventPending()
+{
+	return false;
+}
+
+bool SkiWin::dispatchInputEvent(int seq, KeyEvent* event)
+{
+	LOGW("dispatchInputEvent KeyEvent seq-%d\n",seq);
+
+	return true;
+}
+
+bool SkiWin::dispatchInputEvent(int seq, MotionEvent* event)
+{
+	LOGW("dispatchInputEvent MotionEvent seq-%d\n",seq);
+
+	return true;
+}
+
+#endif /* USE_RAW_EVENT_HUB */
 
 SkBitmap::Config SkiWin::convertPixelFormat(PixelFormat format) {
 	/* note: if PIXEL_FORMAT_RGBX_8888 means that all alpha bytes are 0xFF, then
@@ -274,31 +306,38 @@ bool SkiWin::android()
 {
 
     const nsecs_t startTime = systemTime();
+	
     Rect rect(mWidth, mHeight);
+	
     gWindow->resize(mWidth, mHeight);
+	
     int numViews = getSampleCount(gWindow);
     int i = 0;
     int index = 0;
+	
     do {
         nsecs_t now = systemTime();
         double time = now - startTime;
-        ///LOGW("Try to get events...\n");
-	RawEvent event;
-	mEventHub->getEvents(-1, &event, 1);
- 	//LOGW("Exit from get events.\n");
-	processEvent(event);
+		
+	#ifdef USE_RAW_EVENT_HUB	
+		RawEvent event;
+		mEventHub->getEvents(-1, &event, 1);
+		processEvent(event);
+	#else
 
-	SkCanvas* canvas = lockCanvas(rect);
+	#endif
+	
+		SkCanvas* canvas = lockCanvas(rect);
 
-	index = i%numViews;
-    	i++;
+		index = i++ % numViews;
+
     	loadSample(gWindow, index);
 
     	gWindow->update(NULL);
 
     	canvas->drawBitmap(gWindow->getBitmap(), 0, 0);
 
-	unlockCanvasAndPost();
+		unlockCanvasAndPost();
 
         checkExit();
     } while (!exitPending());
