@@ -87,6 +87,22 @@ private:
 	bool dispatchBatchedInputEventPending(); 
 	bool dispatchInputEvent(int seq, KeyEvent* event);
 	bool dispatchInputEvent(int seq, MotionEvent* event); 
+
+    void notifySwitch(nsecs_t when,
+        uint32_t switchValues, uint32_t switchMask);
+    void notifyConfigurationChanged(nsecs_t when);
+    nsecs_t notifyANR(const sp<InputApplicationHandle>& inputApplicationHandle,
+        const sp<InputWindowHandle>& inputWindowHandle);
+    void notifyInputChannelBroken(const sp<InputWindowHandle>& inputWindowHandle);
+    bool filterInputEvent(const KeyEvent*keyEvent);
+    bool filterInputEvent(const MotionEvent*motionEvent);
+    void interceptKeyBeforeQueueing(const KeyEvent* keyEvent,
+        uint32_t& policyFlags, bool screenOn);
+    int interceptMotionBeforeQueueingWhenScreenOff(uint32_t& policyFlags);
+    KeyEvent* dispatchUnhandledKey(const sp<InputWindowHandle>& inputWindowHandle,
+        const KeyEvent* keyEvent, uint32_t policyFlags);
+    bool checkInjectEventsPermission(
+        int32_t injectorPid, int32_t injectorUid);
 #else    
     void processEvent(const RawEvent& rawEvent);
     void consumeEvent(const RawEvent& rawEvent);

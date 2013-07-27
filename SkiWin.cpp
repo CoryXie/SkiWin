@@ -234,28 +234,109 @@ void SkiWin::printTouchEventType() {
 #else
 
 SkiWinInputEventSink::SkiWinInputEventSink(const void * win)
-{
-  mWin = win;
-}
+	{
+  	mWin = win;
+	}
 
 bool SkiWinInputEventSink::dispatchBatchedInputEventPending()
-{
+	{
 	return false;
-}
+	}
 
 bool SkiWinInputEventSink::dispatchInputEvent(int seq, KeyEvent* event)
-{
+	{
 	LOGW("dispatchInputEvent KeyEvent seq-%d\n",seq);
 
 	return true;
-}
+	}
 
 bool SkiWinInputEventSink::dispatchInputEvent(int seq, MotionEvent* event)
-{
+	{
 	LOGW("dispatchInputEvent MotionEvent seq-%d\n",seq);
 
 	return true;
-}
+	}
+
+void SkiWin::notifySwitch(nsecs_t when,
+	uint32_t switchValues, uint32_t switchMask)
+	{
+	LOGW("notifySwitch when %d switchValues %d switchMask %d\n", 
+		when, switchValues, switchMask);
+	return;
+	}
+
+void SkiWin::notifyConfigurationChanged(nsecs_t when)
+	{
+	LOGW("notifyConfigurationChanged when %d \n", when);
+
+	return;
+	}
+
+nsecs_t SkiWin::notifyANR(const sp<InputApplicationHandle>& inputApplicationHandle,
+	const sp<InputWindowHandle>& inputWindowHandle)
+	{
+	LOGW("notifyANR inputApplicationHandle %p inputWindowHandle %p\n", 
+		inputApplicationHandle, inputWindowHandle);
+	return 0;
+	}
+
+void SkiWin::notifyInputChannelBroken(const sp<InputWindowHandle>& inputWindowHandle)
+	{
+	LOGW("notifyInputChannelBroken inputWindowHandle %p\n", 
+		inputWindowHandle);
+	return ;
+	}
+
+bool SkiWin::filterInputEvent(const KeyEvent* keyEvent)
+	{
+	LOGW("filterInputEvent KeyEvent %p\n", 
+		keyEvent);
+
+	return true;
+	}
+
+bool SkiWin::filterInputEvent(const MotionEvent* motionEvent)
+	{
+	LOGW("filterInputEvent MotionEvent %p\n", 
+		motionEvent);
+
+	return true;
+	}
+
+void SkiWin::interceptKeyBeforeQueueing(const KeyEvent* keyEvent,
+	uint32_t& policyFlags, bool screenOn)
+	{
+	LOGW("interceptKeyBeforeQueueing keyEvent %p policyFlags 0x%x screenOn %d\n", 
+		keyEvent, policyFlags, screenOn);
+
+	return ;
+	}
+
+int SkiWin::interceptMotionBeforeQueueingWhenScreenOff(uint32_t& policyFlags)
+	{
+	LOGW("interceptMotionBeforeQueueingWhenScreenOff policyFlags 0x%x\n", 
+		policyFlags);
+
+	return 0;
+	}
+
+KeyEvent* SkiWin::dispatchUnhandledKey(const sp<InputWindowHandle>& inputWindowHandle,
+	const KeyEvent* keyEvent, uint32_t policyFlags)
+	{
+	LOGW("dispatchUnhandledKey inputWindowHandle %p keyEvent %p policyFlags 0x%x\n", 
+		inputWindowHandle,keyEvent, policyFlags);
+
+	return NULL;
+	}
+
+bool SkiWin::checkInjectEventsPermission(
+	int32_t injectorPid, int32_t injectorUid)
+	{
+	LOGW("checkInjectEventsPermission injectorPid 0x%x injectorUid 0x%x\n", 
+		injectorPid, injectorUid);
+
+	return true;
+	}
 
 #endif /* USE_RAW_EVENT_HUB */
 

@@ -426,15 +426,16 @@ void SkiWinInputManager::notifySwitch(nsecs_t when,
             when, switchValues, switchMask, policyFlags);
 #endif
 
-    todo_notifySwitch(when, switchValues, switchMask);
+    if (mWin != NULL)
+		mWin->notifySwitch(when, switchValues, switchMask);
 }
 
 void SkiWinInputManager::notifyConfigurationChanged(nsecs_t when) {
 #if DEBUG_INPUT_DISPATCHER_POLICY
     ALOGD("notifyConfigurationChanged - when=%lld", when);
 #endif
-
- 	todo_notifyConfigurationChanged(when);
+    if (mWin != NULL)
+		mWin->notifyConfigurationChanged(when);
 }
 
 nsecs_t SkiWinInputManager::notifyANR(const sp<InputApplicationHandle>& inputApplicationHandle,
@@ -443,7 +444,10 @@ nsecs_t SkiWinInputManager::notifyANR(const sp<InputApplicationHandle>& inputApp
     ALOGD("notifyANR");
 #endif
 
-    long newTimeout = todo_notifyANR(inputApplicationHandle, inputWindowHandle);
+    long newTimeout = 0;
+
+    if (mWin != NULL)
+		newTimeout = mWin->notifyANR(inputApplicationHandle, inputWindowHandle);
 
     return newTimeout;
 }
@@ -452,7 +456,8 @@ void SkiWinInputManager::notifyInputChannelBroken(const sp<InputWindowHandle>& i
 #if DEBUG_INPUT_DISPATCHER_POLICY
     ALOGD("notifyInputChannelBroken");
 #endif
-	todo_notifyInputChannelBroken(inputWindowHandle);
+    if (mWin != NULL)
+		mWin->notifyInputChannelBroken(inputWindowHandle);
 }
 
 void SkiWinInputManager::getDispatcherConfiguration(InputDispatcherConfiguration* outConfig) {
@@ -576,10 +581,12 @@ bool SkiWinInputManager::filterInputEvent(const InputEvent* inputEvent, uint32_t
 	
     switch (inputEvent->getType()) {
     case AINPUT_EVENT_TYPE_KEY:
-        pass = todo_filterInputEvent(static_cast<const KeyEvent*>(inputEvent));
+		if (mWin != NULL)
+        	pass = mWin->filterInputEvent(static_cast<const KeyEvent*>(inputEvent));
         break;
     case AINPUT_EVENT_TYPE_MOTION:
-        pass= todo_filterInputEvent(static_cast<const MotionEvent*>(inputEvent));
+		if (mWin != NULL)
+        	pass= mWin->filterInputEvent(static_cast<const MotionEvent*>(inputEvent));
         break;
     default:
         return true; // dispatch the event normally
@@ -599,7 +606,10 @@ void SkiWinInputManager::interceptKeyBeforeQueueing(const KeyEvent* keyEvent,
         bool isScreenOn = this->isScreenOn();
         bool isScreenBright = this->isScreenBright();
 
-		int wmActions = todo_interceptKeyBeforeQueueing(keyEvent, policyFlags, isScreenOn);
+		int wmActions = 0;
+
+		if (mWin != NULL)
+			wmActions = mWin->interceptKeyBeforeQueueing(keyEvent, policyFlags, isScreenOn);
 
         if (!(policyFlags & POLICY_FLAG_INJECTED)) {
             if (!isScreenOn) {
@@ -631,7 +641,10 @@ void SkiWinInputManager::interceptMotionBeforeQueueing(nsecs_t when, uint32_t& p
                 policyFlags |= POLICY_FLAG_BRIGHT_HERE;
             }
         } else {
-			int wmActions = todo_interceptMotionBeforeQueueingWhenScreenOff(policyFlags);
+			int wmActions = 0;
+			
+			if (mWin != NULL)
+				wmActions = mWin->interceptMotionBeforeQueueingWhenScreenOff(policyFlags);
 
             policyFlags |= POLICY_FLAG_WOKE_HERE | POLICY_FLAG_BRIGHT_HERE;
             handleInterceptActions(wmActions, when, /*byref*/ policyFlags);
@@ -705,8 +718,10 @@ bool SkiWinInputManager::dispatchUnhandledKey(const sp<InputWindowHandle>& input
         // Note: inputWindowHandle may be null.
 		if (keyEvent)
 			{
-			KeyEvent* fallbackKeyEvent = 
-				todo_dispatchUnhandledKey(inputWindowHandle,
+			KeyEvent* fallbackKeyEvent = NULL;
+
+			if (mWin != NULL)
+				fallbackKeyEvent = mWin->dispatchUnhandledKey(inputWindowHandle,
 										  keyEvent, policyFlags);
 			
 			// Note: outFallbackKeyEvent may be the same object as keyEvent.
@@ -728,7 +743,10 @@ void SkiWinInputManager::pokeUserActivity(nsecs_t eventTime, int32_t eventType) 
 bool SkiWinInputManager::checkInjectEventsPermissionNonReentrant(
         int32_t injectorPid, int32_t injectorUid) {
         
-  	bool result = todo_checkInjectEventsPermission(injectorPid, injectorUid);
+  	bool result = true;
+	
+	if (mWin != NULL)
+		result = mWin->checkInjectEventsPermission(injectorPid, injectorUid);
 
     return result;
 }
