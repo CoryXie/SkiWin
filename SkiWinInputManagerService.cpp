@@ -780,6 +780,12 @@ void SkiWinInputManagerStart(int ptr) {
     }
 }
 
+void SkiWinInputManagerSetWin(int ptr, sp<SkiWin>& win) {
+    SkiWinInputManager* im = reinterpret_cast<SkiWinInputManager*>(ptr);
+
+    im->setWin(win);
+}
+
 void SkiWinInputManagerSetDisplayViewport(int ptr, bool external,
         int displayId, int orientation,
         int logicalLeft, int logicalTop, int logicalRight, int logicalBottom,

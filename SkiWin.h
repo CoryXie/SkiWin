@@ -142,6 +142,8 @@ private:
     PreallocatedInputEventFactory mEventFactory;
     sp<MessageQueue> mMessageQueue;
     sp<SkiWinInputEventSink> mInputEventSink;
+
+    int mSkiInputManager;
 #endif /* USE_RAW_EVENT_HUB */
 
     SkCanvas canvas;

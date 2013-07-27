@@ -181,5 +181,11 @@ extern bool android_server_PowerManagerService_isScreenBright();
 extern void android_server_PowerManagerService_userActivity(nsecs_t eventTime, int32_t eventType);
 extern void android_server_PowerManagerService_wakeUp(nsecs_t eventTime);
 extern void android_server_PowerManagerService_goToSleep(nsecs_t eventTime);
+
+class SkiWin;
+extern int SkiWinInputManagerInit(const void * serviceObj, const void * contextObj, sp<MessageQueue>& messageQueue);
+extern void SkiWinInputManagerStart(int ptr);
+extern void SkiWinInputManagerSetWin(int ptr, sp<SkiWin>& win);
+
 #endif
 

@@ -135,9 +135,15 @@ status_t SkiWin::readyToRun() {
 	mPublisher = new InputPublisher(serverChannel);
 	mConsumer = new InputConsumer(clientChannel);
 	mMessageQueue = new SkiWinMessageQueue();
-        mInputEventSink = new SkiWinInputEventSink(static_cast<const void *>(this));
-	SkiWinInputEventReceiverInit(mInputEventSink, clientChannel, mMessageQueue);
+	
+	mSkiInputManager = SkiWinInputManagerInit(NULL, NULL, mMessageQueue);
 
+	SkiWinInputManagerSetWin(mSkiInputManager, this);
+
+	SkiWinInputManagerStart(mSkiInputManager);
+	
+    mInputEventSink = new SkiWinInputEventSink(static_cast<const void *>(this));
+	SkiWinInputEventReceiverInit(mInputEventSink, clientChannel, mMessageQueue);
 
 #endif /* */
     return NO_ERROR;
@@ -280,7 +286,7 @@ nsecs_t SkiWin::notifyANR(const sp<InputApplicationHandle>& inputApplicationHand
 	return 0;
 	}
 
-nsecs_t interceptKeyBeforeDispatching(
+nsecs_t SkiWin::interceptKeyBeforeDispatching(
         const sp<InputWindowHandle>& inputWindowHandle,
         const KeyEvent* keyEvent, uint32_t policyFlags)
 	{
