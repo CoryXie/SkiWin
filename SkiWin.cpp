@@ -51,6 +51,7 @@
 #include <EGL/eglext.h>
 
 #include "SkiWin.h"
+#include "MessageQueue.h"
 
 #define LOGW printf
 extern "C" int clock_nanosleep(clockid_t clock_id, int flags,
@@ -63,9 +64,13 @@ SkOSWindow* gWindow;
 
 // ---dd------------------------------------------------------------------------
 
-SkiWin::SkiWin() : Thread(false), mEventHub(new EventHub)
+SkiWin::SkiWin() : Thread(false)
 {
     mSession = new SurfaceComposerClient();
+
+#ifdef USE_RAW_EVENT_HUB
+    mEventHub = new EventHub;
+#endif
 
     application_init();
 
@@ -130,7 +135,7 @@ status_t SkiWin::readyToRun() {
 	mPublisher = new InputPublisher(serverChannel);
 	mConsumer = new InputConsumer(clientChannel);
 	sp<MessageQueue> mMessageQueue = new MessageQueue();
-	SkiWinInputEventReceiverInit(this, mConsumer, );
+	//SkiWinInputEventReceiverInit(this, mConsumer, );
 
 #endif /* */
     return NO_ERROR;
@@ -225,19 +230,25 @@ void SkiWin::printTouchEventType() {
 	}
 }
 #else
-bool SkiWin::dispatchBatchedInputEventPending()
+
+SkiWinInputEventSink::SkiWinInputEventSink(sp<SkiWin>& win):mWin(win)
+{
+
+}
+
+bool SkiWinInputEventSink::dispatchBatchedInputEventPending()
 {
 	return false;
 }
 
-bool SkiWin::dispatchInputEvent(int seq, KeyEvent* event)
+bool SkiWinInputEventSink::dispatchInputEvent(int seq, KeyEvent* event)
 {
 	LOGW("dispatchInputEvent KeyEvent seq-%d\n",seq);
 
 	return true;
 }
 
-bool SkiWin::dispatchInputEvent(int seq, MotionEvent* event)
+bool SkiWinInputEventSink::dispatchInputEvent(int seq, MotionEvent* event)
 {
 	LOGW("dispatchInputEvent MotionEvent seq-%d\n",seq);
 

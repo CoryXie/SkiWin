@@ -3,7 +3,9 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES:= \
 	main.cpp \
-	SkiWin.cpp
+	SkiWin.cpp \
+        SkiWinInputEventReceiver.cpp \
+        SkiWinMessageQueue.cpp
 
 LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES -DEGL_EGLEXT_PROTOTYPES
 

@@ -40,6 +40,7 @@
 #include <SkRegion.h>
 
 #include "SkiWinInputEventSink.h"
+#include "MessageQueue.h"
 
 class SkBitmap;
 class SkCanvas;
@@ -50,10 +51,10 @@ class Surface;
 class SurfaceComposerClient;
 class SurfaceControl;
 
-#define USE_RAW_EVENT_HUB
+#undef USE_RAW_EVENT_HUB
 // ---------------------------------------------------------------------------
 
-class SkiWin : public Thread, public IBinder::DeathRecipient, public SkiWinInputEventSink
+class SkiWin : public Thread, public IBinder::DeathRecipient
 {
 public:
                 SkiWin();

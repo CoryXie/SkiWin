@@ -5,14 +5,15 @@
 #include <androidfw/InputTransport.h>
 
 #include "SkiWinInputEventSink.h"
+#include "MessageQueue.h"
 
 namespace android {
 
 class SkiWinInputEventReceiver : public LooperCallback {
 public:
-    SkiWinInputEventReceiver(const sp<SkiWinInputEventSink>& receiverObj, 
-							 const sp<InputChannel>& inputChannel,
-            				 const sp<MessageQueue>& messageQueue);
+    SkiWinInputEventReceiver(const sp<SkiWinInputEventSink> & receiverObj, 
+			     const sp<InputChannel>& inputChannel,
+            		     const sp<MessageQueue>& messageQueue);
 
     status_t initialize();
     void dispose();
@@ -23,7 +24,7 @@ protected:
     virtual ~SkiWinInputEventReceiver();
 
 private:
-    sp<SkiWinInputEventSink>& mReceiverObjGlobal;
+    sp<SkiWinInputEventSink> mReceiverObjGlobal;
     InputConsumer mInputConsumer;
     sp<MessageQueue> mMessageQueue;
     PreallocatedInputEventFactory mInputEventFactory;
@@ -37,10 +38,9 @@ private:
 };
 
 
-SkiWinInputEventReceiver::SkiWinInputEventReceiver(
-        const sp<SkiWinInputEventSink>& receiverObj, 
-        const sp<InputChannel>& inputChannel,
-        const sp<MessageQueue>& messageQueue) :
+SkiWinInputEventReceiver::SkiWinInputEventReceiver(const sp<SkiWinInputEventSink>&   receiverObj, 
+			     const sp<InputChannel>& inputChannel,
+            		     const sp<MessageQueue>& messageQueue) :
         mReceiverObjGlobal(receiverObj),
         mInputConsumer(inputChannel), 
         mMessageQueue(messageQueue),
@@ -144,7 +144,8 @@ status_t SkiWinInputEventReceiver::consumeEvents(
 #if DEBUG_DISPATCH_CYCLE
                 ALOGD("channel '%s' ~ Received key event.", getInputChannelName());
 #endif
-                skipCallbacks = mReceiverObjGlobal->dispatchInputEvent(seq, 
+                skipCallbacks = mReceiverObjGlobal->dispatchInputEvent(seq, 
+
 					    static_cast<KeyEvent*>(inputEvent));
 
                 break;
@@ -190,9 +191,8 @@ int SkiWinInputEventReceiverInit(sp<SkiWinInputEventSink>& receiverObj,
             receiverObj, inputChannel, messageQueue);
     status_t status = receiver->initialize();
     if (status) {
-        String8 message;
-        message.appendFormat("Failed to initialize input event receiver.  status=%d", status);
-        ALOGW(message.string());
+
+        ALOGW("Failed to initialize input event receiver.  status=%d", status);
         return 0;
     }
 
@@ -211,9 +211,8 @@ void SkiWinInputEventReceiverFinishInputEvent(int receiverPtr,
             reinterpret_cast<SkiWinInputEventReceiver*>(receiverPtr);
     status_t status = receiver->finishInputEvent(seq, handled);
     if (status && status != DEAD_OBJECT) {
-        String8 message;
-        message.appendFormat("Failed to finish input event.  status=%d", status);
-        ALOGW(message.string());
+        
+        ALOGW("Failed to finish input event.  status=%d", status);   
     }
 }
 
@@ -223,9 +222,7 @@ void SkiWinInputEventReceiverConsumeBatchedInputEvents(int receiverPtr,
             reinterpret_cast<SkiWinInputEventReceiver*>(receiverPtr);
     status_t status = receiver->consumeEvents(true /*consumeBatches*/, frameTimeNanos);
     if (status && status != DEAD_OBJECT) {
-        String8 message;
-        message.appendFormat("Failed to consume batched input event.  status=%d", status);
-        ALOGW(message.string());
+        ALOGW("Failed to consume batched input event.  status=%d", status);    
     }
 }
 
