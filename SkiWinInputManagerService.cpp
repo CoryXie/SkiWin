@@ -691,7 +691,10 @@ nsecs_t SkiWinInputManager::interceptKeyBeforeDispatching(
         // Note: inputWindowHandle may be null.
         
         if (keyEvent) {
-            long delayMillis = todo_interceptKeyBeforeDispatching(
+            long delayMillis = 0;
+            
+	    if (mWin != NULL)
+	    mWin->interceptKeyBeforeDispatching(
                     inputWindowHandle, keyEvent, policyFlags);
             bool error = 0;
             if (!error) {

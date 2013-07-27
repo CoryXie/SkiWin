@@ -276,14 +276,23 @@ nsecs_t SkiWin::notifyANR(const sp<InputApplicationHandle>& inputApplicationHand
 	const sp<InputWindowHandle>& inputWindowHandle)
 	{
 	LOGW("notifyANR inputApplicationHandle %p inputWindowHandle %p\n", 
-		inputApplicationHandle, inputWindowHandle);
+		inputApplicationHandle.get(), inputWindowHandle.get());
 	return 0;
+	}
+
+nsecs_t interceptKeyBeforeDispatching(
+        const sp<InputWindowHandle>& inputWindowHandle,
+        const KeyEvent* keyEvent, uint32_t policyFlags)
+	{
+	LOGW("interceptKeyBeforeDispatching inputWindowHandle %p keyEvent %p policyFlags 0x%x\n", 
+		inputWindowHandle.get(), keyEvent, policyFlags);
+	return 0;	
 	}
 
 void SkiWin::notifyInputChannelBroken(const sp<InputWindowHandle>& inputWindowHandle)
 	{
 	LOGW("notifyInputChannelBroken inputWindowHandle %p\n", 
-		inputWindowHandle);
+		inputWindowHandle.get());
 	return ;
 	}
 
@@ -303,13 +312,13 @@ bool SkiWin::filterInputEvent(const MotionEvent* motionEvent)
 	return true;
 	}
 
-void SkiWin::interceptKeyBeforeQueueing(const KeyEvent* keyEvent,
+int SkiWin::interceptKeyBeforeQueueing(const KeyEvent* keyEvent,
 	uint32_t& policyFlags, bool screenOn)
 	{
 	LOGW("interceptKeyBeforeQueueing keyEvent %p policyFlags 0x%x screenOn %d\n", 
 		keyEvent, policyFlags, screenOn);
 
-	return ;
+	return 0;
 	}
 
 int SkiWin::interceptMotionBeforeQueueingWhenScreenOff(uint32_t& policyFlags)
@@ -324,7 +333,7 @@ KeyEvent* SkiWin::dispatchUnhandledKey(const sp<InputWindowHandle>& inputWindowH
 	const KeyEvent* keyEvent, uint32_t policyFlags)
 	{
 	LOGW("dispatchUnhandledKey inputWindowHandle %p keyEvent %p policyFlags 0x%x\n", 
-		inputWindowHandle,keyEvent, policyFlags);
+		inputWindowHandle.get(),keyEvent, policyFlags);
 
 	return NULL;
 	}
