@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <utils/misc.h>
 #include <signal.h>
+#include <unistd.h>
 
 #include <cutils/properties.h>
 
@@ -133,18 +134,24 @@ status_t SkiWin::readyToRun() {
 	status_t result = InputChannel::openInputChannelPair(String8("channel name"),
 			serverChannel, clientChannel);
 	
-	mPublisher = new InputPublisher(serverChannel);
-	mConsumer = new InputConsumer(clientChannel);
 	mMessageQueue = new SkiWinMessageQueue();
+
+	sp<InputApplicationHandle> appHandle = new SkiWinInputApplicationHandle(reinterpret_cast<int>(this));
+	sp<SkiWinInputWindowHandle> winHandle = new SkiWinInputWindowHandle(reinterpret_cast<int>(this), appHandle);
 	
 	mSkiInputManager = SkiWinInputManagerInit(NULL, NULL, mMessageQueue);
 
 	SkiWinInputManagerSetWin(mSkiInputManager, reinterpret_cast<int>(this));
 
+	SkiWinInputManagerRegisterInputChannel(mSkiInputManager, 
+										   clientChannel,
+										   winHandle,
+										   true);
+
 	SkiWinInputManagerStart(mSkiInputManager);
 	
-    mInputEventSink = new SkiWinInputEventSink(static_cast<const void *>(this));
-	SkiWinInputEventReceiverInit(mInputEventSink, clientChannel, mMessageQueue);
+    //mInputEventSink = new SkiWinInputEventSink(static_cast<const void *>(this));
+	//SkiWinInputEventReceiverInit(mInputEventSink, clientChannel, mMessageQueue);
 
 #endif /* */
     return NO_ERROR;
@@ -262,6 +269,42 @@ bool SkiWinInputEventSink::dispatchInputEvent(int seq, MotionEvent* event)
 	LOGW("dispatchInputEvent MotionEvent seq-%d\n",seq);
 
 	return true;
+	}
+
+bool SkiWin::updateInputWindowInfo(struct InputWindowInfo *mInfo)
+	{
+    mInfo->inputChannel.clear();
+
+    mInfo->name.setTo("SkiWin");
+
+    mInfo->layoutParamsFlags =    FLAG_KEEP_SCREEN_ON
+	   							| FLAG_LAYOUT_IN_SCREEN
+	   							| FLAG_LAYOUT_NO_LIMITS;
+    mInfo->layoutParamsType = TYPE_BASE_APPLICATION;
+    mInfo->dispatchingTimeout = DEFAULT_INPUT_DISPATCHING_TIMEOUT_NANOS;
+    mInfo->frameLeft = 0;
+    mInfo->frameTop = 0;
+    mInfo->frameRight = mWidth;
+    mInfo->frameBottom = mHeight;
+    mInfo->scaleFactor = 1;
+
+	SkIRect r;
+
+	r.set(0, 0, mWidth, mHeight);
+
+    SkRegion region(r); ;
+    mInfo->touchableRegion.set(region);
+
+    mInfo->visible = true;
+    mInfo->canReceiveKeys = true;
+    mInfo->hasFocus = true;
+    mInfo->hasWallpaper = false;
+    mInfo->paused = false;
+    mInfo->layer = -1;
+    mInfo->ownerPid = getpid();
+    mInfo->ownerUid = getuid();
+    mInfo->inputFeatures = 0;
+    mInfo->displayId = 0;
 	}
 
 void SkiWin::notifySwitch(nsecs_t when,

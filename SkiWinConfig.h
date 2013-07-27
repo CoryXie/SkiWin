@@ -177,6 +177,10 @@ namespace android {
 
    static  int config_virtualKeyQuietTimeMillis = 250;
 
+   // Default input dispatching timeout in nanoseconds.
+
+   static  long DEFAULT_INPUT_DISPATCHING_TIMEOUT_NANOS = 5000 * 1000000L;
+
 extern bool android_server_PowerManagerService_isScreenOn();
 extern bool android_server_PowerManagerService_isScreenBright();
 extern void android_server_PowerManagerService_userActivity(nsecs_t eventTime, int32_t eventType);
@@ -187,6 +191,28 @@ class SkiWin;
 extern int SkiWinInputManagerInit(const void * serviceObj, const void * contextObj, sp<MessageQueue>& messageQueue);
 extern void SkiWinInputManagerStart(int ptr);
 extern void SkiWinInputManagerSetWin(int ptr, int win);
+
+class SkiWinInputApplicationHandle : public InputApplicationHandle {
+public:
+    SkiWinInputApplicationHandle(int win);
+    virtual SkiWinInputApplicationHandle();
+
+    virtual bool updateInfo();
+private:
+	SkiWin * mWin;
+};
+
+class SkiWinInputWindowHandle : public InputWindowHandle {
+public:
+    SkiWinInputWindowHandle(int win, const sp<InputApplicationHandle>& inputApplicationHandle);
+    virtual SkiWinInputWindowHandle();
+
+    virtual bool updateInfo();
+	
+private:
+	SkiWin * mWin;
+};
+
 }
 #endif
 

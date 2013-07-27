@@ -87,33 +87,6 @@ struct PointerIcon {
 // The scaling factor is calculated as 2 ^ (speed * exponent),
 // where the speed ranges from -7 to + 7 and is supplied by the user.
 static const float POINTER_SPEED_EXPONENT = 1.0f / 4;
-typedef int (*FUNCPTR) (...);	  /* ptr to function returning int */
-
-static struct {
-    FUNCPTR notifyConfigurationChanged;
-    FUNCPTR notifyInputDevicesChanged;
-    FUNCPTR notifySwitch;
-    FUNCPTR notifyInputChannelBroken;
-    FUNCPTR notifyANR;
-    FUNCPTR filterInputEvent;
-    FUNCPTR interceptKeyBeforeQueueing;
-    FUNCPTR interceptMotionBeforeQueueingWhenScreenOff;
-    FUNCPTR interceptKeyBeforeDispatching;
-    FUNCPTR dispatchUnhandledKey;
-    FUNCPTR checkInjectEventsPermission;
-    FUNCPTR getVirtualKeyQuietTimeMillis;
-    FUNCPTR getExcludedDeviceNames;
-    FUNCPTR getKeyRepeatTimeout;
-    FUNCPTR getKeyRepeatDelay;
-    FUNCPTR getHoverTapTimeout;
-    FUNCPTR getHoverTapSlop;
-    FUNCPTR getDoubleTapTimeout;
-    FUNCPTR getLongPressTimeout;
-    FUNCPTR getPointerLayer;
-    FUNCPTR getPointerIcon;
-    FUNCPTR getKeyboardLayoutOverlay;
-    FUNCPTR getDeviceAlias;
-} gServiceClassInfo;
 
 // --- Global functions ---
 
@@ -783,7 +756,7 @@ void SkiWinInputManagerStart(int ptr) {
 void SkiWinInputManagerSetWin(int ptr, int win) {
     SkiWinInputManager* im = reinterpret_cast<SkiWinInputManager*>(ptr);
 
-    im->setWin(reinterpret_cast< SkiWin*>(win));
+    im->setWin(reinterpret_cast<SkiWin*>(win));
 }
 
 void SkiWinInputManagerSetDisplayViewport(int ptr, bool external,
@@ -1017,5 +990,47 @@ void SkiWinInputManagerMonitor(int ptr) {
     im->getInputManager()->getReader()->monitor();
     im->getInputManager()->getDispatcher()->monitor();
 }
+
+SkiWinInputWindowHandle::SkiWinInputWindowHandle(int win,
+        const sp<InputApplicationHandle>& inputApplicationHandle) :
+        InputWindowHandle(inputApplicationHandle) {
+	mWin = reinterpret_cast<SkiWin*>(win);
+}
+
+SkiWinInputWindowHandle::~SkiWinInputWindowHandle() {
+}
+
+bool SkiWinInputWindowHandle::updateInfo() {
+
+    if (!mInfo) {
+        mInfo = new InputWindowInfo();
+    }
+
+	if (mWin != NULL)
+		return mWin->updateInputWindowInfo(mInfo);
+	
+    return false;
+}
+
+SkiWinInputApplicationHandle::SkiWinInputApplicationHandle(int win)  {
+ mWin = reinterpret_cast<SkiWin*>(win);
+}
+
+SkiWinInputApplicationHandle::~SkiWinInputApplicationHandle() {
+}
+
+bool SkiWinInputApplicationHandle::updateInfo() {
+
+    if (!mInfo) {
+        mInfo = new InputApplicationInfo();
+    }
+
+    mInfo->name.setTo("SkiWin");
+
+    mInfo->dispatchingTimeout = DEFAULT_INPUT_DISPATCHING_TIMEOUT_NANOS;
+
+    return true;
+}
+
 } /* namespace android */
 

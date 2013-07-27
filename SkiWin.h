@@ -96,6 +96,8 @@ struct TouchEvent {
         const KeyEvent* keyEvent, uint32_t policyFlags);
     bool checkInjectEventsPermission(
         int32_t injectorPid, int32_t injectorUid);
+
+    bool updateInputWindowInfo(struct InputWindowInfo *mInfo);
 #endif /* USE_RAW_EVENT_HUB */
 
 private:
