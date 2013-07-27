@@ -30,8 +30,8 @@
 #include <utils/RefBase.h>
 #include <utils/KeyedVector.h>
 #include <utils/List.h>
-#include <EventHub.h>
-#include <InputReader.h>
+#include <input/EventHub.h>
+#include <input/InputReader.h>
 
 #include <SkWindow.h>
 #include <SkApplication.h>
@@ -55,6 +55,7 @@ class SurfaceControl;
 extern int SkiWinInputEventReceiverInit(sp<SkiWinInputEventSink>& receiverObj,
         			   sp<InputChannel>& inputChannelObj, 
         			   sp<MessageQueue> messageQueueObj);
+
 // ---------------------------------------------------------------------------
 
 class SkiWin : public Thread, public IBinder::DeathRecipient

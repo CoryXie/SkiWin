@@ -1,3 +1,5 @@
+#ifndef ANDROID_SKIWINCONFIG_H
+#define ANDROID_SKIWINCONFIG_H
  /**
    * Defines the width of the horizontal scrollbar and the height of the vertical scrollbar in
    * dips
@@ -173,4 +175,11 @@
    static  int OVERFLING_DISTANCE = 6;
 
    static  int config_virtualKeyQuietTimeMillis = 250;
+
+extern bool android_server_PowerManagerService_isScreenOn();
+extern bool android_server_PowerManagerService_isScreenBright();
+extern void android_server_PowerManagerService_userActivity(nsecs_t eventTime, int32_t eventType);
+extern void android_server_PowerManagerService_wakeUp(nsecs_t eventTime);
+extern void android_server_PowerManagerService_goToSleep(nsecs_t eventTime);
+#endif
 

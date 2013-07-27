@@ -35,15 +35,11 @@
 #include <input/PointerController.h>
 #include <input/SpriteController.h>
 
-#include <android_os_MessageQueue.h>
-#include <android_view_InputDevice.h>
-#include <android_view_KeyEvent.h>
-#include <android_view_MotionEvent.h>
-#include <android_view_InputChannel.h>
-#include <android_view_PointerIcon.h>
-#include <android/graphics/GraphicsJNI.h>
+#include "MessageQueue.h"
 
 #include "SkiWinConfig.h"
+
+#include "SkiWin.h"
 
 //#include "com_android_server_power_PowerManagerService.h"
 //#include "com_android_server_input_InputApplicationHandle.h"
@@ -51,6 +47,42 @@
 
 namespace android {
 
+/* Pointer icon styles.
+ * Must match the definition in android.view.PointerIcon.
+ */
+enum {
+    POINTER_ICON_STYLE_CUSTOM = -1,
+    POINTER_ICON_STYLE_NULL = 0,
+    POINTER_ICON_STYLE_ARROW = 1000,
+    POINTER_ICON_STYLE_SPOT_HOVER = 2000,
+    POINTER_ICON_STYLE_SPOT_TOUCH = 2001,
+    POINTER_ICON_STYLE_SPOT_ANCHOR = 2002,
+};
+
+/*
+ * Describes a pointer icon.
+ */
+struct PointerIcon {
+    inline PointerIcon() {
+        reset();
+    }
+
+    int32_t style;
+    SkBitmap bitmap;
+    float hotSpotX;
+    float hotSpotY;
+
+    inline bool isNullIcon() {
+        return style == POINTER_ICON_STYLE_NULL;
+    }
+
+    inline void reset() {
+        style = POINTER_ICON_STYLE_NULL;
+        bitmap.reset();
+        hotSpotX = 0;
+        hotSpotY = 0;
+    }
+};
 // The exponent used to calculate the pointer speed scaling factor.
 // The scaling factor is calculated as 2 ^ (speed * exponent),
 // where the speed ranges from -7 to + 7 and is supplied by the user.
@@ -95,10 +127,10 @@ inline static T max(const T& a, const T& b) {
     return a > b ? a : b;
 }
 
-void loadSystemIconAsSprite(void* contextObj, int32_t style,
+void loadSystemIconAsSprite(const void* contextObj, int32_t style,
         SpriteIcon* outSpriteIcon) {
         
-    PointerIcon pointerIcon = SpriteIcon();
+    PointerIcon pointerIcon = PointerIcon();
     pointerIcon.bitmap.copyTo(&outSpriteIcon->bitmap, SkBitmap::kARGB_8888_Config);
     outSpriteIcon->hotSpotX = pointerIcon.hotSpotX;
     outSpriteIcon->hotSpotY = pointerIcon.hotSpotY;
@@ -124,6 +156,8 @@ public:
     SkiWinInputManager(const void * contextObj, const void * serviceObj, const sp<Looper>& looper);
 
     inline sp<InputManager> getInputManager() const { return mInputManager; }
+
+    inline void setWin(sp<SkiWin>& win) { mWin = win; }
 
     void dump(String8& dump);
 
@@ -179,6 +213,7 @@ private:
 
     const void * mContextObj;
     const void * mServiceObj;
+    sp<SkiWin> mWin;
     sp<Looper> mLooper;
 
     Mutex mLock;
@@ -772,7 +807,7 @@ bool SkiWinInputManagerHasKeys(int ptr, int deviceId, int sourceMask, int keyCod
     SkiWinInputManager* im = reinterpret_cast<SkiWinInputManager*>(ptr);
 
     int32_t* codes = keyCodes;
-    uint8_t* flags = outFlags;
+    uint8_t* flags = reinterpret_cast<uint8_t*>(outFlags);
     size_t numCodes = sizeof(keyCodes)/sizeof(int);
 	
     bool result;
@@ -832,24 +867,24 @@ void SkiWinInputManagerSetInputFilterEnabled(int ptr, bool enabled) {
 int SkiWinInputManagerInjectInputEvent(int ptr, const InputEvent* inputEvent, int injectorPid, int injectorUid,
         int syncMode, int timeoutMillis, int policyFlags) {
     SkiWinInputManager* im = reinterpret_cast<SkiWinInputManager*>(ptr);
+    int32_t type = inputEvent->getType();
+    if (type == AINPUT_EVENT_TYPE_KEY) {
 
-    switch (inputEvent->getType()) {
-    case AINPUT_EVENT_TYPE_KEY:
         const KeyEvent* keyEvent = static_cast<const KeyEvent*>(inputEvent);
         return im->getInputManager()->getDispatcher()->injectInputEvent(
                 keyEvent, injectorPid, injectorUid, syncMode, timeoutMillis,
                 uint32_t(policyFlags));
-
-        break;
-    case AINPUT_EVENT_TYPE_MOTION:
+	}
+    else if (type == AINPUT_EVENT_TYPE_MOTION)
+	{
         const MotionEvent* motionEvent = static_cast<const MotionEvent*>(inputEvent);
         return im->getInputManager()->getDispatcher()->injectInputEvent(
                 motionEvent, injectorPid, injectorUid, syncMode, timeoutMillis,
                 uint32_t(policyFlags));
-        break;
-    default:
+	}
+  else
         return INPUT_EVENT_INJECTION_FAILED; 
-    }
+    
 }
 
 void SkiWinInputManagerSetInputWindows(int ptr, Vector<sp<InputWindowHandle> >& windowHandles) {
@@ -899,7 +934,7 @@ void SkiWinInputManagerSetShowTouches(int ptr, bool enabled) {
     im->setShowTouches(enabled);
 }
 
-void SkiWinInputManagerVibrate(int ptr, int deviceId, long patternObj[],
+void SkiWinInputManagerVibrate(int ptr, int deviceId, long long patternObj[],
         int repeat, int token) {
     SkiWinInputManager* im = reinterpret_cast<SkiWinInputManager*>(ptr);
 
@@ -911,10 +946,10 @@ void SkiWinInputManagerVibrate(int ptr, int deviceId, long patternObj[],
         return; // limit to reasonable size
     }
 
-    long* patternMillis = static_cast<long*>(patternObj);
+    long long * patternMillis = static_cast<long long *>(patternObj);
     nsecs_t pattern[patternSize];
     for (size_t i = 0; i < patternSize; i++) {
-        pattern[i] = max(long(0), min(patternMillis[i],
+        pattern[i] = max(0LL, min(patternMillis[i],
                 MAX_VIBRATE_PATTERN_DELAY_NSECS / 1000000LL)) * 1000000LL;
     }
 
@@ -946,7 +981,7 @@ void SkiWinInputManagerReloadDeviceAliases(int ptr) {
 
     String8 dump;
     im->dump(dump);
-    return dump.string());
+    return dump.string();
 }
 
 void SkiWinInputManagerMonitor(int ptr) {

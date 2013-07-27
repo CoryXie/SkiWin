@@ -5,7 +5,8 @@ LOCAL_SRC_FILES:= \
 	main.cpp \
 	SkiWin.cpp \
         SkiWinInputEventReceiver.cpp \
-        SkiWinMessageQueue.cpp
+        SkiWinMessageQueue.cpp \
+        SkiWinInputManagerService.cpp
 
 LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES -DEGL_EGLEXT_PROTOTYPES
 
@@ -48,7 +49,7 @@ LOCAL_C_INCLUDES := \
     frameworks/base/core/jni/android/graphics \
     frameworks/base/native/include/android \
     frameworks/native/services/surfaceflinger \
-    frameworks/base/services/input/\
+    frameworks/base/services\
     SkiaSamples
 
 LOCAL_MODULE:= SkiWin
