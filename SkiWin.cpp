@@ -134,8 +134,10 @@ status_t SkiWin::readyToRun() {
 	
 	mPublisher = new InputPublisher(serverChannel);
 	mConsumer = new InputConsumer(clientChannel);
-	sp<MessageQueue> mMessageQueue = new MessageQueue();
-	//SkiWinInputEventReceiverInit(this, mConsumer, );
+	mMessageQueue = new SkiWinMessageQueue();
+        mInputEventSink = new SkiWinInputEventSink(static_cast<const void *>(this));
+	SkiWinInputEventReceiverInit(mInputEventSink, clientChannel, mMessageQueue);
+
 
 #endif /* */
     return NO_ERROR;
@@ -231,9 +233,9 @@ void SkiWin::printTouchEventType() {
 }
 #else
 
-SkiWinInputEventSink::SkiWinInputEventSink(sp<SkiWin>& win):mWin(win)
+SkiWinInputEventSink::SkiWinInputEventSink(const void * win)
 {
-
+  mWin = win;
 }
 
 bool SkiWinInputEventSink::dispatchBatchedInputEventPending()
@@ -349,6 +351,7 @@ bool SkiWin::android()
     	canvas->drawBitmap(gWindow->getBitmap(), 0, 0);
 
 		unlockCanvasAndPost();
+      sleep(3);
 
         checkExit();
     } while (!exitPending());

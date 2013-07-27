@@ -7,21 +7,19 @@
 #include <utils/Looper.h>
 #include <utils/threads.h>
 #include <androidfw/InputTransport.h>
-#include "SkiWin.h"
+
 
 namespace android {
 
-class SkiWin;
-
 class SkiWinInputEventSink  : public RefBase{
 public:
-        SkiWinInputEventSink(sp<SkiWin>& win);
+        SkiWinInputEventSink(const void * win);
        ~SkiWinInputEventSink(){};
 	bool dispatchBatchedInputEventPending(); 
 	bool dispatchInputEvent(int seq, KeyEvent* event);
 	bool dispatchInputEvent(int seq, MotionEvent* event); 
 private:
-       sp<SkiWin> mWin;
+       const void * mWin;
 };
 }
 #endif

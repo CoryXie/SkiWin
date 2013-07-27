@@ -51,7 +51,10 @@ class Surface;
 class SurfaceComposerClient;
 class SurfaceControl;
 
-#undef USE_RAW_EVENT_HUB
+
+extern int SkiWinInputEventReceiverInit(sp<SkiWinInputEventSink>& receiverObj,
+        			   sp<InputChannel>& inputChannelObj, 
+        			   sp<MessageQueue> messageQueueObj);
 // ---------------------------------------------------------------------------
 
 class SkiWin : public Thread, public IBinder::DeathRecipient
@@ -116,6 +119,7 @@ private:
     InputConsumer* mConsumer;
     PreallocatedInputEventFactory mEventFactory;
     sp<MessageQueue> mMessageQueue;
+    sp<SkiWinInputEventSink> mInputEventSink;
 #endif /* USE_RAW_EVENT_HUB */
 
     SkCanvas canvas;
