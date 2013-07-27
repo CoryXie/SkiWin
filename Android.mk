@@ -24,7 +24,8 @@ LOCAL_SHARED_LIBRARIES := \
     libGLESv2 \
     libGLESv1_CM \
     libgui \
-    libinput
+    libinput \
+    libandroid_servers
 
 LOCAL_STATIC_LIBRARIES := \
     libskiagpu

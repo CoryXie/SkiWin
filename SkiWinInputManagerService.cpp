@@ -157,7 +157,7 @@ public:
 
     inline sp<InputManager> getInputManager() const { return mInputManager; }
 
-    inline void setWin(sp<SkiWin>& win) { mWin = win; }
+    inline void setWin(SkiWin *  win) { mWin = win; }
 
     void dump(String8& dump);
 
@@ -213,7 +213,7 @@ private:
 
     const void * mContextObj;
     const void * mServiceObj;
-    sp<SkiWin> mWin;
+    SkiWin * mWin;
     sp<Looper> mLooper;
 
     Mutex mLock;
@@ -780,10 +780,10 @@ void SkiWinInputManagerStart(int ptr) {
     }
 }
 
-void SkiWinInputManagerSetWin(int ptr, sp<SkiWin>& win) {
+void SkiWinInputManagerSetWin(int ptr, int win) {
     SkiWinInputManager* im = reinterpret_cast<SkiWinInputManager*>(ptr);
 
-    im->setWin(win);
+    im->setWin(reinterpret_cast< SkiWin*>(win));
 }
 
 void SkiWinInputManagerSetDisplayViewport(int ptr, bool external,

@@ -1,5 +1,6 @@
 #ifndef ANDROID_SKIWINCONFIG_H
 #define ANDROID_SKIWINCONFIG_H
+namespace android {
  /**
    * Defines the width of the horizontal scrollbar and the height of the vertical scrollbar in
    * dips
@@ -185,7 +186,7 @@ extern void android_server_PowerManagerService_goToSleep(nsecs_t eventTime);
 class SkiWin;
 extern int SkiWinInputManagerInit(const void * serviceObj, const void * contextObj, sp<MessageQueue>& messageQueue);
 extern void SkiWinInputManagerStart(int ptr);
-extern void SkiWinInputManagerSetWin(int ptr, sp<SkiWin>& win);
-
+extern void SkiWinInputManagerSetWin(int ptr, int win);
+}
 #endif
 

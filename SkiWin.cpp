@@ -51,6 +51,7 @@
 #include <EGL/eglext.h>
 
 #include "SkiWin.h"
+#include "SkiWinConfig.h"
 #include "MessageQueue.h"
 
 #define LOGW printf
@@ -138,7 +139,7 @@ status_t SkiWin::readyToRun() {
 	
 	mSkiInputManager = SkiWinInputManagerInit(NULL, NULL, mMessageQueue);
 
-	SkiWinInputManagerSetWin(mSkiInputManager, this);
+	SkiWinInputManagerSetWin(mSkiInputManager, reinterpret_cast<int>(this));
 
 	SkiWinInputManagerStart(mSkiInputManager);
 	
