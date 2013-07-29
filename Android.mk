@@ -6,11 +6,11 @@ LOCAL_SRC_FILES:= \
 	SkiWin.cpp \
         SkiWinInputEventReceiver.cpp \
         SkiWinMessageQueue.cpp \
-        SkiWinInputManagerService.cpp
+#        SkiWinInputManagerService.cpp
 
 LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES -DEGL_EGLEXT_PROTOTYPES
 
-#LOCAL_CFLAGS += -DUSE_RAW_EVENT_HUB
+LOCAL_CFLAGS += -DUSE_RAW_EVENT_HUB
 
 LOCAL_SHARED_LIBRARIES := \
 	libcutils \

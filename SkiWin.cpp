@@ -485,8 +485,8 @@ bool SkiWin::android()
 		mEventHub->getEvents(-1, &event, 1);
 		processEvent(event);
 	#else
-	SkiWinInputManagerSetFocusedApplication(mSkiInputManager, appHandle);
-	SkiWinInputManagerSetInputWindows(mSkiInputManager, windowHandles);
+	    SkiWinInputManagerSetFocusedApplication(mSkiInputManager, appHandle);
+	    SkiWinInputManagerSetInputWindows(mSkiInputManager, windowHandles);
 	#endif
 	
 		SkCanvas* canvas = lockCanvas(rect);
@@ -500,7 +500,10 @@ bool SkiWin::android()
     	canvas->drawBitmap(gWindow->getBitmap(), 0, 0);
 
 		unlockCanvasAndPost();
-      sleep(3);
+		
+        #ifndef  USE_RAW_EVENT_HUB
+        sleep(3);
+        #endif
 
         checkExit();
     } while (!exitPending());
