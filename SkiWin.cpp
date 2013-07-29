@@ -134,7 +134,12 @@ status_t SkiWin::readyToRun() {
 #ifdef USE_RAW_EVENT_HUB
 	mEventHub = new EventHub;
 	mEventListener = new SkiWinEventInputListener(gWindow, Looper::getForThread());
-	mEventReader = new mEventReader(mEventHub, mEventListener, mEventListener);
+	mEventReader = new InputReader(mEventHub, mEventListener, mEventListener);
+	mReaderThread = new InputReaderThread(mEventReader);
+	status = mReaderThread->run("SkiWinInputReader", PRIORITY_URGENT_DISPLAY);
+	if (status) {
+	ALOGE("Could not start InputReader thread due to error %d.", status);
+	}
 #else /* USE_RAW_EVENT_HUB */
 	status_t result = InputChannel::openInputChannelPair(String8("SkiWin"),
 			serverChannel, clientChannel);

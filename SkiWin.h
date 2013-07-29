@@ -137,6 +137,7 @@ private:
     sp<EventHub> mEventHub;
     sp<InputReader> mEventReader;
     sp<SkiWinEventInputListener> mEventListener;
+    sp<InputReaderThread> mReaderThread;
     
     bool waiting;
     TouchEvent mTouchEvent;
