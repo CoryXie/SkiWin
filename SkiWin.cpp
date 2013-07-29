@@ -43,6 +43,8 @@
 #include <gui/Surface.h>
 #include <gui/SurfaceComposerClient.h>
 
+#include <input/InputWindow.h>
+
 #include <core/SkBitmap.h>
 #include <core/SkStream.h>
 #include <images/SkImageDecoder.h>
@@ -131,13 +133,15 @@ status_t SkiWin::readyToRun() {
     mFlingerSurface = surface;
 
 #ifndef USE_RAW_EVENT_HUB
-	status_t result = InputChannel::openInputChannelPair(String8("channel name"),
+	status_t result = InputChannel::openInputChannelPair(String8("SkiWin"),
 			serverChannel, clientChannel);
 	
 	mMessageQueue = new SkiWinMessageQueue();
 
-	sp<InputApplicationHandle> appHandle = new SkiWinInputApplicationHandle(reinterpret_cast<int>(this));
-	sp<SkiWinInputWindowHandle> winHandle = new SkiWinInputWindowHandle(reinterpret_cast<int>(this), appHandle);
+	appHandle = new SkiWinInputApplicationHandle(reinterpret_cast<int>(this));
+	winHandle = new SkiWinInputWindowHandle(reinterpret_cast<int>(this), appHandle);
+	
+	windowHandles.add(winHandle);
 	
 	mSkiInputManager = SkiWinInputManagerInit(NULL, NULL, mMessageQueue);
 
@@ -147,9 +151,9 @@ status_t SkiWin::readyToRun() {
 										   clientChannel,
 										   winHandle,
 										   true);
-
+										  
 	SkiWinInputManagerStart(mSkiInputManager);
-	
+
     //mInputEventSink = new SkiWinInputEventSink(static_cast<const void *>(this));
 	//SkiWinInputEventReceiverInit(mInputEventSink, clientChannel, mMessageQueue);
 
@@ -273,7 +277,9 @@ bool SkiWinInputEventSink::dispatchInputEvent(int seq, MotionEvent* event)
 
 bool SkiWin::updateInputWindowInfo(struct InputWindowInfo *mInfo)
 	{
-    mInfo->inputChannel.clear();
+	LOGW("updateInputWindowInfo %p\n",mInfo);
+
+    mInfo->inputChannel = clientChannel;
 
     mInfo->name.setTo("SkiWin");
 
@@ -305,6 +311,8 @@ bool SkiWin::updateInputWindowInfo(struct InputWindowInfo *mInfo)
     mInfo->ownerUid = getuid();
     mInfo->inputFeatures = 0;
     mInfo->displayId = 0;
+    
+	return true;
 	}
 
 void SkiWin::notifySwitch(nsecs_t when,
@@ -477,7 +485,8 @@ bool SkiWin::android()
 		mEventHub->getEvents(-1, &event, 1);
 		processEvent(event);
 	#else
-
+	SkiWinInputManagerSetFocusedApplication(mSkiInputManager, appHandle);
+	SkiWinInputManagerSetInputWindows(mSkiInputManager, windowHandles);
 	#endif
 	
 		SkCanvas* canvas = lockCanvas(rect);

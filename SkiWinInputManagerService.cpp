@@ -19,10 +19,10 @@
 //#define LOG_NDEBUG 0
 
 // Log debug messages about InputReaderPolicy
-#define DEBUG_INPUT_READER_POLICY 0
+#define DEBUG_INPUT_READER_POLICY 1
 
 // Log debug messages about InputDispatcherPolicy
-#define DEBUG_INPUT_DISPATCHER_POLICY 0
+#define DEBUG_INPUT_DISPATCHER_POLICY 1
 
 #include <limits.h>
 #include <android_runtime/AndroidRuntime.h>
@@ -41,9 +41,6 @@
 
 #include "SkiWin.h"
 
-//#include "com_android_server_power_PowerManagerService.h"
-//#include "com_android_server_input_InputApplicationHandle.h"
-//#include "com_android_server_input_InputWindowHandle.h"
 
 namespace android {
 
@@ -117,6 +114,8 @@ enum {
 
 
 // --- SkiWinInputManager ---
+
+extern sp <InputManager> gInputManager;
 
 class SkiWinInputManager : public virtual RefBase,
     public virtual InputReaderPolicyInterface,
@@ -238,8 +237,9 @@ SkiWinInputManager::SkiWinInputManager(const void * contextObj,
 	mLocked.showTouches = false;
 	}
 
-    sp<EventHub> eventHub = new EventHub();
-    mInputManager = new InputManager(eventHub, this, this);
+        sp<EventHub> eventHub = new EventHub();
+        mInputManager = new InputManager(eventHub, this, this);      
+  
 }
 
 SkiWinInputManager::~SkiWinInputManager() {
@@ -380,8 +380,8 @@ sp<KeyCharacterMap> SkiWinInputManager::getKeyboardLayoutOverlay(
 	
 	sp<KeyCharacterMap> result;
 
-	KeyCharacterMap::loadContents(String8("filenameChars"),
-			String8("contentsChars"), KeyCharacterMap::FORMAT_OVERLAY, &result);
+    KeyCharacterMap::load(String8("/system/usr/keylayout/qwerty.kl"),
+		KeyCharacterMap::FORMAT_OVERLAY, &result);
 
     return result;
 }

@@ -146,6 +146,9 @@ private:
     sp<SkiWinInputEventSink> mInputEventSink;
 
     int mSkiInputManager;
+    Vector<sp<InputWindowHandle> > windowHandles;
+    sp<InputApplicationHandle> appHandle ;
+    sp<InputWindowHandle> winHandle ;
 #endif /* USE_RAW_EVENT_HUB */
 
     SkCanvas canvas;
