@@ -43,6 +43,7 @@
 
 #include "SkiWinInputEventSink.h"
 #include "MessageQueue.h"
+#include "SkiWinEventInputListener.h"
 
 class SkBitmap;
 class SkCanvas;
@@ -134,6 +135,9 @@ private:
 
 #ifdef USE_RAW_EVENT_HUB
     sp<EventHub> mEventHub;
+    sp<InputReader> mEventReader;
+    sp<SkiWinEventInputListener> mEventListener;
+    
     bool waiting;
     TouchEvent mTouchEvent;
     List<TouchEvent> eventBuffer;

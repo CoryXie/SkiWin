@@ -44,6 +44,7 @@
 #include <gui/SurfaceComposerClient.h>
 
 #include <input/InputWindow.h>
+#include <input/InputReader.h>
 
 #include <core/SkBitmap.h>
 #include <core/SkStream.h>
@@ -56,6 +57,7 @@
 #include "SkiWin.h"
 #include "SkiWinConfig.h"
 #include "MessageQueue.h"
+#include "SkiWinEventInputListener.h"
 
 #define LOGW printf
 extern "C" int clock_nanosleep(clockid_t clock_id, int flags,
@@ -72,13 +74,10 @@ SkiWin::SkiWin() : Thread(false)
 {
     mSession = new SurfaceComposerClient();
 
-#ifdef USE_RAW_EVENT_HUB
-    mEventHub = new EventHub;
-#endif
-
     application_init();
 
     gWindow = create_sk_window(NULL, 0, 0);  
+
 }
 
 SkiWin::~SkiWin() {
@@ -131,8 +130,12 @@ status_t SkiWin::readyToRun() {
     mHeight = dinfo.h;
     mFlingerSurfaceControl = control;
     mFlingerSurface = surface;
-
-#ifndef USE_RAW_EVENT_HUB
+	
+#ifdef USE_RAW_EVENT_HUB
+	mEventHub = new EventHub;
+	mEventListener = new SkiWinEventInputListener(gWindow, Looper::getForThread());
+	mEventReader = new mEventReader(mEventHub, mEventListener, mEventListener);
+#else /* USE_RAW_EVENT_HUB */
 	status_t result = InputChannel::openInputChannelPair(String8("SkiWin"),
 			serverChannel, clientChannel);
 	
@@ -154,10 +157,7 @@ status_t SkiWin::readyToRun() {
 										  
 	SkiWinInputManagerStart(mSkiInputManager);
 
-    //mInputEventSink = new SkiWinInputEventSink(static_cast<const void *>(this));
-	//SkiWinInputEventReceiverInit(mInputEventSink, clientChannel, mMessageQueue);
-
-#endif /* */
+#endif /* USE_RAW_EVENT_HUB */
     return NO_ERROR;
 }
 
@@ -481,9 +481,9 @@ bool SkiWin::android()
         double time = now - startTime;
 		
 	#ifdef USE_RAW_EVENT_HUB	
-		RawEvent event;
-		mEventHub->getEvents(-1, &event, 1);
-		processEvent(event);
+		//RawEvent event;
+		//mEventHub->getEvents(-1, &event, 1);
+		//processEvent(event);
 	#else
 	    SkiWinInputManagerSetFocusedApplication(mSkiInputManager, appHandle);
 	    SkiWinInputManagerSetInputWindows(mSkiInputManager, windowHandles);
@@ -501,9 +501,7 @@ bool SkiWin::android()
 
 		unlockCanvasAndPost();
 		
-        #ifndef  USE_RAW_EVENT_HUB
         sleep(3);
-        #endif
 
         checkExit();
     } while (!exitPending());
