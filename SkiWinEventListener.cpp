@@ -37,6 +37,37 @@ SkiWinEventInputListener::SkiWinEventInputListener(SkOSWindow * & window,
 	mLocked.pointerGesturesEnabled = true;
 	mLocked.showTouches = false;
 	}
+	{
+	static const size_t bitmap_width = 64;
+	static const size_t bitmap_height = 64;
+	
+    bitmap.setConfig(
+			SkBitmap::kARGB_8888_Config,
+			bitmap_width,
+			bitmap_height);
+	bitmap.allocPixels();
+
+	// Icon for spot touches
+	bitmap.eraseARGB(125, 0, 255, 0);
+	spotTouchIcon = android::SpriteIcon(
+			bitmap,
+			bitmap_width/2,
+			bitmap_height/2);
+
+	// Icon for anchor touches
+	bitmap.eraseARGB(125, 0, 0, 255);
+	spotAnchorIcon = android::SpriteIcon(
+			bitmap,
+			bitmap_width/2,
+			bitmap_height/2);
+
+	// Icon for hovering touches
+	bitmap.eraseARGB(125, 255, 0, 0);
+	spotHoverIcon = android::SpriteIcon(
+			bitmap,
+			bitmap_width/2,
+			bitmap_height/2);
+	}
 }
 
 SkiWinEventInputListener::~SkiWinEventInputListener() {
@@ -164,5 +195,10 @@ String8 SkiWinEventInputListener::getDeviceAlias(const InputDeviceIdentifier& id
     return result;
 }
 
+void SkiWinInputManager::loadPointerResources(PointerResources* outResources) {
+  	outResources->spotHover = spotHoverIcon.copy();
+    outResources->spotTouch = spotTouchIcon.copy();
+	outResources->spotAnchor = spotAnchorIcon.copy(); 
+}
 }
 

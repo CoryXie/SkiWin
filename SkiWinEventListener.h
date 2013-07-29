@@ -25,7 +25,8 @@ namespace android {
  * input events to SkOSWindow objects.
  */
 class SkiWinEventInputListener : public InputListenerInterface, 
-                                 public InputReaderPolicyInterface {
+                                 public InputReaderPolicyInterface,
+                                 public PointerControllerPolicyInterface {
 protected:
     virtual ~SkiWinEventInputListener();
 
@@ -85,6 +86,11 @@ private:
     } mLocked;
 
     void updateInactivityTimeoutLocked(const sp<PointerController>& controller);
+    
+    android::SpriteIcon spotHoverIcon;
+	android::SpriteIcon spotTouchIcon;
+	android::SpriteIcon spotAnchorIcon;
+	SkBitmap bitmap;
 };
 
 }
