@@ -8,6 +8,7 @@
 #include <cutils/log.h>
 #include "SkiWinEventListener.h"
 
+#define ALOGD printf
 namespace android {
 
 // The exponent used to calculate the pointer speed scaling factor.
@@ -95,7 +96,7 @@ void SkiWinEventInputListener::notifyDeviceReset(const NotifyDeviceResetArgs* ar
 }
 
 void SkiWinEventInputListener::getReaderConfiguration(InputReaderConfiguration* outConfig) {
-
+    ALOGD("getReaderConfiguration\n");
     int virtualKeyQuietTime = config_virtualKeyQuietTimeMillis;
 
 	outConfig->virtualKeyQuietTime = milliseconds_to_nanoseconds(virtualKeyQuietTime);
@@ -172,13 +173,13 @@ sp<PointerControllerInterface> SkiWinEventInputListener::obtainPointerController
 }
 
 void SkiWinEventInputListener::notifyInputDevicesChanged(const Vector<InputDeviceInfo>& inputDevices) {
-	ALOGD("notifyInputDevicesChanged");
+	ALOGD("notifyInputDevicesChanged\n");
 }
 
 sp<KeyCharacterMap> SkiWinEventInputListener::getKeyboardLayoutOverlay(
         const String8& inputDeviceDescriptor) {
         
-	ALOGD("getKeyboardLayoutOverlay");
+	ALOGD("getKeyboardLayoutOverlay\n");
 	
 	sp<KeyCharacterMap> result;
 
@@ -189,13 +190,14 @@ sp<KeyCharacterMap> SkiWinEventInputListener::getKeyboardLayoutOverlay(
 }
 
 String8 SkiWinEventInputListener::getDeviceAlias(const InputDeviceIdentifier& identifier) {
-	ALOGD("getDeviceAlias");
+	ALOGD("getDeviceAlias\n");
 
     String8 result = identifier.uniqueId;
     return result;
 }
 
-void SkiWinInputManager::loadPointerResources(PointerResources* outResources) {
+void SkiWinEventInputListener::loadPointerResources(PointerResources* outResources) {
+    ALOGD("loadPointerResources\n");
   	outResources->spotHover = spotHoverIcon.copy();
     outResources->spotTouch = spotTouchIcon.copy();
 	outResources->spotAnchor = spotAnchorIcon.copy(); 

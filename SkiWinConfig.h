@@ -179,7 +179,7 @@ namespace android {
 
    // Default input dispatching timeout in nanoseconds.
 
-   static  long DEFAULT_INPUT_DISPATCHING_TIMEOUT_NANOS = 5000 * 1000000L;
+   static  long long DEFAULT_INPUT_DISPATCHING_TIMEOUT_NANOS = 5000 * 1000000LL;
 
   // Window flags from WindowManager.LayoutParams
     enum {

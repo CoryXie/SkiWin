@@ -138,7 +138,8 @@ private:
     sp<InputReader> mEventReader;
     sp<SkiWinEventInputListener> mEventListener;
     sp<InputReaderThread> mReaderThread;
-    
+    sp<Looper> mLooper;
+
     bool waiting;
     TouchEvent mTouchEvent;
     List<TouchEvent> eventBuffer;

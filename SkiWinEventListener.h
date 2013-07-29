@@ -40,21 +40,23 @@ public:
      void notifyDeviceReset(const NotifyDeviceResetArgs* args);
 
     /* Gets the input reader configuration. */
-     void getReaderConfiguration(InputReaderConfiguration* outConfig) = 0;
+     void getReaderConfiguration(InputReaderConfiguration* outConfig);
 
     /* Gets a pointer controller associated with the specified cursor device (ie. a mouse). */
-     sp<PointerControllerInterface> obtainPointerController(int32_t deviceId) = 0;
+     sp<PointerControllerInterface> obtainPointerController(int32_t deviceId) ;
 
     /* Notifies the input reader policy that some input devices have changed
      * and provides information about all current input devices.
      */
-     void notifyInputDevicesChanged(const Vector<InputDeviceInfo>& inputDevices) = 0;
+     void notifyInputDevicesChanged(const Vector<InputDeviceInfo>& inputDevices);
 
     /* Gets the keyboard layout for a particular input device. */
-     sp<KeyCharacterMap> getKeyboardLayoutOverlay(const String8& inputDeviceDescriptor) = 0;
+     sp<KeyCharacterMap> getKeyboardLayoutOverlay(const String8& inputDeviceDescriptor);
 
     /* Gets a user-supplied alias for a particular input device, or an empty string if none. */
-     String8 getDeviceAlias(const InputDeviceIdentifier& identifier) = 0;
+     String8 getDeviceAlias(const InputDeviceIdentifier& identifier);
+     
+     void loadPointerResources(PointerResources* outResources);
 
 private:
     SkOSWindow * mWindow;
@@ -87,9 +89,9 @@ private:
 
     void updateInactivityTimeoutLocked(const sp<PointerController>& controller);
     
-    android::SpriteIcon spotHoverIcon;
-	android::SpriteIcon spotTouchIcon;
-	android::SpriteIcon spotAnchorIcon;
+    SpriteIcon spotHoverIcon;
+	SpriteIcon spotTouchIcon;
+	SpriteIcon spotAnchorIcon;
 	SkBitmap bitmap;
 };
 

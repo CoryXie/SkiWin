@@ -133,7 +133,8 @@ status_t SkiWin::readyToRun() {
 	
 #ifdef USE_RAW_EVENT_HUB
 	mEventHub = new EventHub;
-	mEventListener = new SkiWinEventInputListener(gWindow, Looper::getForThread());
+	mLooper = Looper::getForThread();
+	mEventListener = new SkiWinEventInputListener(gWindow, mLooper);
 	mEventReader = new InputReader(mEventHub, mEventListener, mEventListener);
 	mReaderThread = new InputReaderThread(mEventReader);
 	status = mReaderThread->run("SkiWinInputReader", PRIORITY_URGENT_DISPLAY);
