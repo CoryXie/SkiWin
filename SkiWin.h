@@ -43,7 +43,7 @@
 
 #include "SkiWinInputEventSink.h"
 #include "MessageQueue.h"
-#include "SkiWinEventInputListener.h"
+#include "SkiWinEventListener.h"
 
 class SkBitmap;
 class SkCanvas;

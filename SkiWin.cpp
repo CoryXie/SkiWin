@@ -57,7 +57,7 @@
 #include "SkiWin.h"
 #include "SkiWinConfig.h"
 #include "MessageQueue.h"
-#include "SkiWinEventInputListener.h"
+#include "SkiWinEventListener.h"
 
 #define LOGW printf
 extern "C" int clock_nanosleep(clockid_t clock_id, int flags,

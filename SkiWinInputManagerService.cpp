@@ -80,22 +80,8 @@ struct PointerIcon {
         hotSpotY = 0;
     }
 };
-// The exponent used to calculate the pointer speed scaling factor.
-// The scaling factor is calculated as 2 ^ (speed * exponent),
-// where the speed ranges from -7 to + 7 and is supplied by the user.
-static const float POINTER_SPEED_EXPONENT = 1.0f / 4;
 
 // --- Global functions ---
-
-template<typename T>
-inline static T min(const T& a, const T& b) {
-    return a < b ? a : b;
-}
-
-template<typename T>
-inline static T max(const T& a, const T& b) {
-    return a > b ? a : b;
-}
 
 void loadSystemIconAsSprite(const void* contextObj, int32_t style,
         SpriteIcon* outSpriteIcon) {

@@ -262,6 +262,8 @@ namespace android {
         INPUT_FEATURE_DISABLE_USER_ACTIVITY = 0x00000004,
     };
 
+
+#ifndef USE_RAW_EVENT_HUB
 class InputManager;    
 extern bool android_server_PowerManagerService_isScreenOn();
 extern bool android_server_PowerManagerService_isScreenBright();
@@ -299,6 +301,8 @@ public:
 private:
 	SkiWin * mWin;
 };
+
+#endif /* USE_RAW_EVENT_HUB */
 
 }
 #endif

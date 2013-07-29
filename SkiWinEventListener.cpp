@@ -2,15 +2,32 @@
 
 //#define LOG_NDEBUG 0
 
-#include "SkiWinEventInputListener.h"
 
+#include <SkWindow.h>
+#include <SkApplication.h>
 #include <cutils/log.h>
+#include "SkiWinEventListener.h"
 
 namespace android {
 
+// The exponent used to calculate the pointer speed scaling factor.
+// The scaling factor is calculated as 2 ^ (speed * exponent),
+// where the speed ranges from -7 to + 7 and is supplied by the user.
+static const float POINTER_SPEED_EXPONENT = 1.0f / 4;
+
+template<typename T>
+inline static T min(const T& a, const T& b) {
+    return a < b ? a : b;
+}
+
+template<typename T>
+inline static T max(const T& a, const T& b) {
+    return a > b ? a : b;
+}
+
 // --- SkiWinEventInputListener ---
 
-SkiWinEventInputListener::SkiWinEventInputListener(const SkOSWindow * & window,
+SkiWinEventInputListener::SkiWinEventInputListener(SkOSWindow * & window,
 		sp<Looper>& looper) :
         mWindow(window), mLooper(looper){
 	{
