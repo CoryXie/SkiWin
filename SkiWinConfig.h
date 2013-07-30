@@ -262,6 +262,7 @@ namespace android {
         INPUT_FEATURE_DISABLE_USER_ACTIVITY = 0x00000004,
     };
 
+    static const size_t MAX_POINTER_COUNT = 16;
 
 #ifndef USE_RAW_EVENT_HUB
 class InputManager;    

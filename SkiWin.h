@@ -112,9 +112,7 @@ private:
 	bool dispatchInputEvent(int seq, KeyEvent* event);
 	bool dispatchInputEvent(int seq, MotionEvent* event); 
 #else    
-    void processEvent(const RawEvent& rawEvent);
-    void consumeEvent(const RawEvent& rawEvent);
-    void printTouchEventType();
+   
 #endif /* USE_RAW_EVENT_HUB */
 
     SkBitmap::Config convertPixelFormat(PixelFormat format);
@@ -134,15 +132,6 @@ private:
     sp<Surface> mFlingerSurface;
 
 #ifdef USE_RAW_EVENT_HUB
-    sp<EventHub> mEventHub;
-    sp<InputReader> mEventReader;
-    sp<SkiWinEventInputListener> mEventListener;
-    sp<InputReaderThread> mReaderThread;
-    sp<Looper> mLooper;
-
-    bool waiting;
-    TouchEvent mTouchEvent;
-    List<TouchEvent> eventBuffer;
 #else
     sp<InputChannel> serverChannel, clientChannel;
     InputPublisher* mPublisher;
