@@ -49,6 +49,7 @@
 #include <core/SkBitmap.h>
 #include <core/SkStream.h>
 #include <images/SkImageDecoder.h>
+#include <utils/android/AndroidKeyToSkKey.h>
 
 #include <GLES/gl.h>
 #include <GLES/glext.h>
@@ -110,13 +111,71 @@ void SkiWin::binderDied(const wp<IBinder>& who)
 void SkiWinNotifyKeyCallback(const NotifyKeyArgs* args, void* context)
 {
     printf("%s\n", __PRETTY_FUNCTION__);
+	ALOGD("notifyKey - eventTime=%lld, deviceId=%d, source=0x%x, policyFlags=0x%x, action=0x%x, "
+			"flags=0x%x, keyCode=0x%x, scanCode=0x%x, metaState=0x%x, downTime=%lld",
+			args->eventTime, args->deviceId, args->source, args->policyFlags,
+			args->action, args->flags, args->keyCode, args->scanCode,
+			args->metaState, args->downTime);
 
+	if (args->action == AKEY_EVENT_ACTION_DOWN) 
+		{
+		gWindow->handleKey(AndroidKeycodeToSkKey(args->keyCode));
+		/* gWindow->handleChar((SkUnichar) uni); */
+		} 
+	else if (args->action == AKEY_EVENT_ACTION_UP) 
+		{
+		gWindow->handleKeyUp(AndroidKeycodeToSkKey(args->keyCode));
+		}
 }
 
 void SkiWinNotifyMotionCallback(const NotifyMotionArgs* args, void* context)
 {
     printf("%s\n", __PRETTY_FUNCTION__);
+	
+    ALOGD("notifyMotion - eventTime=%lld, deviceId=%d, source=0x%x, policyFlags=0x%x, "
+            "action=0x%x, flags=0x%x, metaState=0x%x, buttonState=0x%x, edgeFlags=0x%x, "
+            "xPrecision=%f, yPrecision=%f, downTime=%lld",
+            args->eventTime, args->deviceId, args->source, args->policyFlags,
+            args->action, args->flags, args->metaState, args->buttonState,
+            args->edgeFlags, args->xPrecision, args->yPrecision, args->downTime);
+    for (uint32_t i = 0; i < args->pointerCount; i++) {
+        ALOGD("  Pointer %d: id=%d, toolType=%d, "
+                "x=%f, y=%f, pressure=%f, size=%f, "
+                "touchMajor=%f, touchMinor=%f, toolMajor=%f, toolMinor=%f, "
+                "orientation=%f",
+                i, args->pointerProperties[i].id,
+                args->pointerProperties[i].toolType,
+                args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_X),
+                args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_Y),
+                args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_PRESSURE),
+                args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_SIZE),
+                args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR),
+                args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR),
+                args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOOL_MAJOR),
+                args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOOL_MINOR),
+                args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_ORIENTATION));
+            }
 
+	int32_t x = int32_t(args->pointerCoords[0].getAxisValue(AMOTION_EVENT_AXIS_X));
+	int32_t y = int32_t(args->pointerCoords[0].getAxisValue(AMOTION_EVENT_AXIS_Y));
+
+   SkView::Click::State state;
+   switch(args->buttonState) {
+	   case 0:	   // MotionEvent.ACTION_DOWN
+		   state = SkView::Click::kDown_State;
+		   break;
+	   case 1:	   // MotionEvent.ACTION_UP
+	   case 3:	   // MotionEvent.ACTION_CANCEL
+		   state = SkView::Click::kUp_State;
+		   break;
+	   case 2:	   // MotionEvent.ACTION_MOVE
+		   state = SkView::Click::kMoved_State;
+		   break;
+	   default:
+		   SkDebugf("motion event ignored\n");
+		   return;
+   }
+   gWindow->handleClick(x, y, state);
 }
 
 void SkiWinNotifySwitchCallback(const NotifySwitchArgs* args, void* context)
@@ -455,7 +514,7 @@ bool SkiWin::android()
 
 		index = i++ % numViews;
 
-    	loadSample(gWindow, index);
+    	//loadSample(gWindow, index);
 
     	gWindow->update(NULL);
 
@@ -463,7 +522,10 @@ bool SkiWin::android()
 
 		unlockCanvasAndPost();
 
-        sleep(3);
+              // 12fps: don't animate too fast to preserve CPU
+        const nsecs_t sleepTime = 83333 - ns2us(systemTime() - now);
+        if (sleepTime > 0)
+            usleep(sleepTime);
 
         checkExit();
     } while (!exitPending());
@@ -485,3 +547,4 @@ void SkiWin::checkExit() {
 
 }
 ; // namespace android
+
