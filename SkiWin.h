@@ -40,6 +40,7 @@
 #include <SkCanvas.h>
 #include <SkBitmap.h>
 #include <SkRegion.h>
+#include <SkiaSamples/SampleApp.h>
 
 #include "SkiWinInputEventSink.h"
 #include "MessageQueue.h"
