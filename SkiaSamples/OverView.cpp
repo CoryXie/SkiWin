@@ -11,98 +11,115 @@
 
 static const int N = 8;
 const SkScalar W = SkIntToScalar(640);
-const SkScalar H = SkIntToScalar(480); 
+const SkScalar H = SkIntToScalar(480);
 
 static const char gIsOverview[] = "is-overview";
-bool is_overview(SkView* view) {
+bool is_overview(SkView* view)
+    {
     SkEvent isOverview(gIsOverview);
-    return view->doQuery(&isOverview); 
-}
-class OverView : public SkView {
-public:
-    OverView(int count, const SkViewFactory* factories[]);
-    virtual ~OverView();
-    
-protected:
-    virtual bool onEvent(const SkEvent&);
-    virtual void onSizeChange();
-    
-    virtual void onDraw(SkCanvas* canvas) {
-        canvas->drawColor(SK_ColorLTGRAY);
+    return view->doQuery(&isOverview);
     }
+class OverView : public SkView
+    {
+    public:
+        OverView(int count, const SkViewFactory* factories[]);
+        virtual ~OverView();
 
-    virtual SkCanvas* beforeChildren(SkCanvas*);
+    protected:
+        virtual bool onEvent(const SkEvent&);
+        virtual void onSizeChange();
 
-    virtual bool onQuery(SkEvent* evt) {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "Overview");
-            return true;
-        }
-        if (evt->isType(gIsOverview)) {
-            return true;
-        }
-        return this->INHERITED::onQuery(evt);
-    }
+        virtual void onDraw(SkCanvas* canvas)
+            {
+            canvas->drawColor(SK_ColorLTGRAY);
+            }
 
-    virtual bool onSendClickToChildren(SkScalar x, SkScalar y) {
-        return false;
-    }
+        virtual SkCanvas* beforeChildren(SkCanvas*);
 
-    virtual Click* onFindClickHandler(SkScalar x, SkScalar y) {
-        int ix = (int)(SkScalarDiv(x * N, W));
-        int iy = (int)(SkScalarDiv(y * N, H));
-        if (ix >= 0 && iy >= 0) {
-            SkEvent evt("set-curr-index");
-            evt.setFast32(iy * N + ix);
-            this->sendEventToParents(evt);
-        }
-        return NULL;
-    }
+        virtual bool onQuery(SkEvent* evt)
+            {
+            if (SampleCode::TitleQ(*evt))
+                {
+                SampleCode::TitleR(evt, "Overview");
+                return true;
+                }
+            if (evt->isType(gIsOverview))
+                {
+                return true;
+                }
+            return this->INHERITED::onQuery(evt);
+            }
 
-private:
-    int             fCount;
-    const SkViewFactory**  fFactories;
+        virtual bool onSendClickToChildren(SkScalar x, SkScalar y)
+            {
+            return false;
+            }
 
-    typedef SkView INHERITED;
-};
+        virtual Click* onFindClickHandler(SkScalar x, SkScalar y)
+            {
+            int ix = (int)(SkScalarDiv(x * N, W));
+            int iy = (int)(SkScalarDiv(y * N, H));
+            if (ix >= 0 && iy >= 0)
+                {
+                SkEvent evt("set-curr-index");
+                evt.setFast32(iy * N + ix);
+                this->sendEventToParents(evt);
+                }
+            return NULL;
+            }
 
-SkView* create_overview(int count, const SkViewFactory* factories[]) {
+    private:
+        int             fCount;
+        const SkViewFactory**  fFactories;
+
+        typedef SkView INHERITED;
+    };
+
+SkView* create_overview(int count, const SkViewFactory* factories[])
+    {
     return SkNEW_ARGS(OverView, (count, factories));
-};
+    };
 
-OverView::OverView(int count, const SkViewFactory* factories[]) {
+OverView::OverView(int count, const SkViewFactory* factories[])
+    {
     fCount = count;
     fFactories = factories;
-}
+    }
 
-OverView::~OverView() {
-}
+OverView::~OverView()
+    {
+    }
 
-bool OverView::onEvent(const SkEvent& evt) {
+bool OverView::onEvent(const SkEvent& evt)
+    {
     return this->INHERITED::onEvent(evt);
-}
+    }
 
-void OverView::onSizeChange() {
+void OverView::onSizeChange()
+    {
     this->detachAllChildren();
-    
+
     SkScalar locX = 0;
     SkScalar locY = 0;
-    for (int i = 0; i < fCount; i++) {
+    for (int i = 0; i < fCount; i++)
+        {
         SkView* view = (*fFactories[i])();
         view->setVisibleP(true);
         this->attachChildToBack(view)->unref();
         view->setLoc(locX, locY);
         view->setSize(W, H);
         locX += W;
-        if ((i % N) == N - 1) {
+        if ((i % N) == N - 1)
+            {
             locY += H;
             locX = 0;
+            }
         }
     }
-}
 
-SkCanvas* OverView::beforeChildren(SkCanvas* canvas) {
+SkCanvas* OverView::beforeChildren(SkCanvas* canvas)
+    {
     canvas->scale(SK_Scalar1 / N, SK_Scalar1 / N);
     return canvas;
-}
+    }
 

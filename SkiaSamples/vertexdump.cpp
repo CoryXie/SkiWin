@@ -9,7 +9,8 @@
 
 void setup_vertexbug(SkPoint verts[], SkPoint texs[], uint16_t index[]);
 
-void setup_vertexbug(SkPoint verts[], SkPoint texs[], uint16_t index[]) {
+void setup_vertexbug(SkPoint verts[], SkPoint texs[], uint16_t index[])
+    {
     verts[0].set(SkFloatToScalar(107), SkFloatToScalar(189));
     texs[0].set(SkFloatToScalar(0), SkFloatToScalar(0));
     verts[1].set(SkFloatToScalar(116), SkFloatToScalar(189));
@@ -42,14 +43,24 @@ void setup_vertexbug(SkPoint verts[], SkPoint texs[], uint16_t index[]) {
     texs[14].set(SkFloatToScalar(35), SkFloatToScalar(48));
     verts[15].set(SkFloatToScalar(212), SkFloatToScalar(233));
     texs[15].set(SkFloatToScalar(44), SkFloatToScalar(48));
-    index[0] = 0; index[1] = 5; index[2] = 1;
-    index[3] = 0; index[4] = 4; index[5] = 5;
+    index[0] = 0;
+    index[1] = 5;
+    index[2] = 1;
+    index[3] = 0;
+    index[4] = 4;
+    index[5] = 5;
 #if 0
-    index[6] = 1; index[7] = 6; index[8] = 2;
+    index[6] = 1;
+    index[7] = 6;
+    index[8] = 2;
 #else
-    index[6] = 6; index[7] = 2; index[8] = 1;
+    index[6] = 6;
+    index[7] = 2;
+    index[8] = 1;
 #endif
-    index[9] = 1; index[10] = 5; index[11] = 6;
+    index[9] = 1;
+    index[10] = 5;
+    index[11] = 6;
     index[12] = 2;
     index[13] = 7;
     index[14] = 3;
@@ -92,4 +103,4 @@ void setup_vertexbug(SkPoint verts[], SkPoint texs[], uint16_t index[]) {
     index[51] = 10;
     index[52] = 14;
     index[53] = 15;
-}
+    }

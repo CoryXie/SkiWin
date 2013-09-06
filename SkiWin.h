@@ -42,114 +42,68 @@
 #include <SkRegion.h>
 #include <SkiaSamples/SampleApp.h>
 
-#include "SkiWinInputEventSink.h"
-#include "MessageQueue.h"
 #include "SkiWinEventListener.h"
 
 class SkBitmap;
 class SkCanvas;
 
-namespace android {
+namespace android
+{
 
 class Surface;
 class SurfaceComposerClient;
 class SurfaceControl;
 
-
-extern int SkiWinInputEventReceiverInit(sp<SkiWinInputEventSink>& receiverObj,
-        			   sp<InputChannel>& inputChannelObj, 
-        			   sp<MessageQueue> messageQueueObj);
-
 // ---------------------------------------------------------------------------
 
 class SkiWin : public Thread, public IBinder::DeathRecipient
-{
-public:
-                SkiWin();
-    virtual     ~SkiWin();
+    {
+    public:
+        SkiWin();
+        virtual     ~SkiWin();
 
-    sp<SurfaceComposerClient> session() const;
-    
-#ifdef USE_RAW_EVENT_HUB
-struct TouchEvent {
-		enum TouchEventType {
-			Down, Up, Moving
-		};
-		int32_t x;
-		int32_t y;
-		enum TouchEventType type;
-	};
-#else
-    void notifySwitch(nsecs_t when,
-        uint32_t switchValues, uint32_t switchMask);
-    void notifyConfigurationChanged(nsecs_t when);
-    nsecs_t notifyANR(const sp<InputApplicationHandle>& inputApplicationHandle,
-        const sp<InputWindowHandle>& inputWindowHandle);
-    void notifyInputChannelBroken(const sp<InputWindowHandle>& inputWindowHandle);
-    bool filterInputEvent(const KeyEvent*keyEvent);
-    bool filterInputEvent(const MotionEvent*motionEvent);
-    int interceptKeyBeforeQueueing(const KeyEvent* keyEvent,
-        uint32_t& policyFlags, bool screenOn);
-    nsecs_t interceptKeyBeforeDispatching(
-        const sp<InputWindowHandle>& inputWindowHandle,
-        const KeyEvent* keyEvent, uint32_t policyFlags);
-    int interceptMotionBeforeQueueingWhenScreenOff(uint32_t& policyFlags);
-    KeyEvent* dispatchUnhandledKey(const sp<InputWindowHandle>& inputWindowHandle,
-        const KeyEvent* keyEvent, uint32_t policyFlags);
-    bool checkInjectEventsPermission(
-        int32_t injectorPid, int32_t injectorUid);
+        sp<SurfaceComposerClient> session() const;
 
-    bool updateInputWindowInfo(struct InputWindowInfo *mInfo);
-#endif /* USE_RAW_EVENT_HUB */
+        struct TouchEvent
+            {
+            enum TouchEventType
+                {
+                Down, Up, Moving
+                };
+            int32_t x;
+            int32_t y;
+            enum TouchEventType type;
+            };
 
-private:
-    virtual bool        threadLoop();
-    virtual status_t    readyToRun();
-    virtual void        onFirstRef();
-    virtual void        binderDied(const wp<IBinder>& who);
+    private:
+        virtual bool        threadLoop();
+        virtual status_t    readyToRun();
+        virtual void        onFirstRef();
+        virtual void        binderDied(const wp<IBinder>& who);
 
-#ifndef USE_RAW_EVENT_HUB
-	bool dispatchBatchedInputEventPending(); 
-	bool dispatchInputEvent(int seq, KeyEvent* event);
-	bool dispatchInputEvent(int seq, MotionEvent* event); 
-#else    
-   
-#endif /* USE_RAW_EVENT_HUB */
+        void drawTitle(const SkString& string,
+                       bool subpixelTextEnabled,
+                       bool lcdRenderTextEnabled);
 
-    SkBitmap::Config convertPixelFormat(PixelFormat format);
-    SkCanvas* lockCanvas(const Rect& dirtyRect);
-    void unlockCanvasAndPost();
+        SkBitmap::Config convertPixelFormat(PixelFormat format);
+        SkCanvas* lockCanvas(const Rect& dirtyRect);
+        void unlockCanvasAndPost();
 
-    bool android();
+        bool android();
 
-    void checkExit();
+        void checkExit();
 
-    sp<SurfaceComposerClient>       mSession;
-  
-    int         mWidth;
-    int         mHeight;
-   
-    sp<SurfaceControl> mFlingerSurfaceControl;
-    sp<Surface> mFlingerSurface;
+        sp<SurfaceComposerClient>       mSession;
 
-#ifdef USE_RAW_EVENT_HUB
-#else
-    sp<InputChannel> serverChannel, clientChannel;
-    InputPublisher* mPublisher;
-    InputConsumer* mConsumer;
-    PreallocatedInputEventFactory mEventFactory;
-    sp<MessageQueue> mMessageQueue;
-    sp<SkiWinInputEventSink> mInputEventSink;
+        int         mWidth;
+        int         mHeight;
 
-    int mSkiInputManager;
-    Vector<sp<InputWindowHandle> > windowHandles;
-    sp<InputApplicationHandle> appHandle ;
-    sp<InputWindowHandle> winHandle ;
-#endif /* USE_RAW_EVENT_HUB */
+        sp<SurfaceControl> mFlingerSurfaceControl;
+        sp<Surface> mFlingerSurface;
 
-    SkCanvas canvas;
-    int saveCount;
-};
+        SkCanvas mCanvas;
+        int mCanvasSaveCount;
+    };
 
 // ---------------------------------------------------------------------------
 
