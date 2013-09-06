@@ -57,6 +57,7 @@
 
 #include "SkiWin.h"
 #include "SkiWinEventListener.h"
+#include "SkiWinView.h"
 
 #define LOGW printf
 extern "C" int clock_nanosleep(clockid_t clock_id, int flags,
@@ -73,7 +74,15 @@ SkOSWindow* gWindow;
 SkiWin::SkiWin() : Thread(false)
     {
     mSession = new SurfaceComposerClient();
-
+    
+    mTitleView = new SkiWinView(mSession, 
+                   String8("TitleView"),
+                   0, 0, 320, 30, 0x30000000);
+    
+    mContentView = new SkiWinView(mSession, 
+                   String8("ContentView"),
+                   0, 30, 320, 450, 0x40000000);
+    
     application_init();
 
     gWindow = create_sk_window(NULL, 0, 0);
@@ -216,30 +225,17 @@ status_t SkiWin::readyToRun()
         return -1;
         }
 
-    // create the native surface
-    sp<SurfaceControl> control = session()->createSurface(String8("SkiWin"),
-                                 dinfo.w, dinfo.h, PIXEL_FORMAT_RGB_565);
-
-    SurfaceComposerClient::openGlobalTransaction();
-    control->setLayer(0x40000000);
-    SurfaceComposerClient::closeGlobalTransaction();
-
-    sp<Surface> surface = control->getSurface();
-
     mWidth = dinfo.w;
     mHeight = dinfo.h;
-    mFlingerSurfaceControl = control;
-    mFlingerSurface = surface;
 
     gInputEventCallback.pfNotifyKey = SkiWinNotifyKeyCallback;
     gInputEventCallback.pfNotifyMotion = SkiWinNotifyMotionCallback;
     gInputEventCallback.pfNotifySwitch = SkiWinNotifySwitchCallback;
-    gInputEventCallback.context = NULL;
+    gInputEventCallback.context = this;
 
     SkiWinInputConfiguration config =
         {
-touchPointerVisible :
-        true,
+        touchPointerVisible : true,
         touchPointerLayer : 0x40000001
         };
 
@@ -258,149 +254,10 @@ bool SkiWin::threadLoop()
     // No need to force exit anymore
     property_set(EXIT_PROP_NAME, "0");
 
-    mFlingerSurface.clear();
-    mFlingerSurfaceControl.clear();
-
     IPCThreadState::self()->stopProcess();
 
     return r;
     }
-
-SkBitmap::Config SkiWin::convertPixelFormat(PixelFormat format)
-    {
-    /* note: if PIXEL_FORMAT_RGBX_8888 means that all alpha bytes are 0xFF, then
-     we can map to SkBitmap::kARGB_8888_Config, and optionally call
-     bitmap.setIsOpaque(true) on the resulting SkBitmap (as an accelerator)
-     */
-    switch (format)
-        {
-        case PIXEL_FORMAT_RGBX_8888:
-            return SkBitmap::kARGB_8888_Config;
-        case PIXEL_FORMAT_RGBA_8888:
-            return SkBitmap::kARGB_8888_Config;
-        case PIXEL_FORMAT_RGBA_4444:
-            return SkBitmap::kARGB_4444_Config;
-        case PIXEL_FORMAT_RGB_565:
-            return SkBitmap::kRGB_565_Config;
-        case PIXEL_FORMAT_A_8:
-            return SkBitmap::kA8_Config;
-        default:
-            return SkBitmap::kNo_Config;
-        }
-    }
-
-/**
- * lockCanvas - Start editing the pixels in the surface.
- *
- * Just like lockCanvas() but allows specification of a dirty rectangle.
- *
- * This is from android/4.2/frameworks/base/core/jni/android_view_Surface.cpp
- * nativeLockCanvas().
- */
-
-SkCanvas* SkiWin::lockCanvas(const Rect& dirtyRect)
-    {
-    // get dirty region
-    Region dirtyRegion;
-
-    if (!dirtyRect.isEmpty())
-        {
-        dirtyRegion.set(dirtyRect);
-        }
-    else
-        {
-        dirtyRegion.set(Rect(0x3FFF, 0x3FFF));
-        }
-
-    Surface::SurfaceInfo info;
-
-    status_t err = mFlingerSurface->lock(&info, &dirtyRegion);
-    assert(err == 0);
-
-    SkBitmap bitmap;
-
-    ssize_t bpr = info.s * bytesPerPixel(info.format);
-
-    bitmap.setConfig(convertPixelFormat(info.format), info.w, info.h, bpr);
-
-    if (info.format == PIXEL_FORMAT_RGBX_8888)
-        {
-        bitmap.setIsOpaque(true);
-        }
-
-    if (info.w > 0 && info.h > 0)
-        {
-        bitmap.setPixels(info.bits);
-        }
-    else
-        {
-        // be safe with an empty bitmap.
-        bitmap.setPixels(NULL);
-        }
-
-    mCanvas.setBitmapDevice(bitmap);
-
-    SkRegion clipReg;
-    if (dirtyRegion.isRect())   // very common case
-        {
-        const Rect b(dirtyRegion.getBounds());
-        clipReg.setRect(b.left, b.top, b.right, b.bottom);
-        }
-    else
-        {
-        size_t count;
-        Rect const* r = dirtyRegion.getArray(&count);
-        while (count)
-            {
-            clipReg.op(r->left, r->top, r->right, r->bottom, SkRegion::kUnion_Op);
-            r++, count--;
-            }
-        }
-
-    mCanvas.clipRegion(clipReg);
-
-    mCanvasSaveCount = mCanvas.save();
-
-    return &mCanvas;
-    }
-
-/**
- * unlockCanvasAndPost - Finish editing pixels in the surface.
- *
- * This is from android/4.2/frameworks/base/core/jni/android_view_Surface.cpp
- * nativeLockCanvas().
- */
-
-void SkiWin::unlockCanvasAndPost()
-    {
-
-    // detach the canvas from the surface
-    mCanvas.restoreToCount(mCanvasSaveCount);
-
-    mCanvas.setBitmapDevice(SkBitmap());
-
-    // unlock surface
-    status_t err = mFlingerSurface->unlockAndPost();
-
-    assert(err == 0);
-    }
-
-void SkiWin::drawTitle(const SkString& string,
-                       bool subpixelTextEnabled,
-                       bool lcdRenderTextEnabled)
-    {
-    SkPaint paint;
-
-    paint.setColor(SK_ColorWHITE);
-    paint.setDither(true);
-    paint.setAntiAlias(true);
-    paint.setSubpixelText(subpixelTextEnabled);
-    paint.setLCDRenderText(lcdRenderTextEnabled);
-    paint.setTextSize(25);
-
-    mCanvas.drawText(string.c_str(), string.size(), 15, 15, paint);
-    }
-
 
 bool SkiWin::android()
     {
@@ -411,35 +268,37 @@ bool SkiWin::android()
 
     gWindow->resize(mWidth, mHeight);
 
-    int numViews = getSampleCount(gWindow);
-    int i = 0;
-    int index = 0;
-
     do
         {
-        nsecs_t now = systemTime();
-        double time = now - startTime;
-
-        SkCanvas* canvas = lockCanvas(rect);
-
-        index = i++ % numViews;
-
-        //loadSample(gWindow, index);
-
         gWindow->update(NULL);
 
-        canvas->clear(SK_ColorBLACK);
+        SkCanvas* titileCanvas = mTitleView->lockCanvas(rect);
+        if (titileCanvas)
+            {
+            SkPaint paint;
+            const char * title = gWindow->getTitle();
+            
+            paint.setColor(SK_ColorWHITE);
+            paint.setDither(true);
+            paint.setAntiAlias(true);
+            paint.setSubpixelText(true);
+            paint.setLCDRenderText(true);
+            paint.setTextSize(25);
+                        
+            titileCanvas->clear(SK_ColorBLACK);
+            
+            titileCanvas->drawText(title, strlen(title), 15, 25, paint);
+            }
+        mTitleView->unlockCanvasAndPost();
 
-        drawTitle(SkString(gWindow->getTitle()), true, true);
+        SkCanvas* contentCanvas = mContentView->lockCanvas(rect);
+        if (contentCanvas)
+            {            
+            contentCanvas->drawBitmap(gWindow->getBitmap(), 0, 30);
+            }
+        mContentView->unlockCanvasAndPost();
 
-        canvas->drawBitmap(gWindow->getBitmap(), 0, 30);
-
-        unlockCanvasAndPost();
-
-        // 12fps: don't animate too fast to preserve CPU
-        const nsecs_t sleepTime = 83333 - ns2us(systemTime() - now);
-        if (sleepTime > 0)
-            usleep(sleepTime);
+        usleep(100000);        
 
         checkExit();
         }

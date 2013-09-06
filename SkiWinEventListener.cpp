@@ -19,8 +19,8 @@ class SkiWinPointerControllerPolicy : public PointerControllerPolicyInterface
     {
     public:
 
-        static const size_t bitmap_width = 64;
-        static const size_t bitmap_height = 64;
+        static const size_t bitmap_width = 8;
+        static const size_t bitmap_height = 8;
 
         SkiWinPointerControllerPolicy()
             {
@@ -73,11 +73,11 @@ class SkiWinInputReaderPolicyInterface : public InputReaderPolicyInterface
             SkiWinInputConfiguration* configuration,
             const sp<Looper>& looper)
             : mLooper(looper),
-              mTouchPointerVisible(configuration->touchPointerLayer)
+              mTouchPointerLayer(configuration->touchPointerLayer)
             {
             mInputReaderConfig.showTouches = configuration->touchPointerVisible;
 
-            auto display = SurfaceComposerClient::getBuiltInDisplay(ISurfaceComposer::eDisplayIdMain);
+            sp<IBinder> display = SurfaceComposerClient::getBuiltInDisplay(ISurfaceComposer::eDisplayIdMain);
 
             DisplayInfo info;
 
@@ -105,7 +105,7 @@ class SkiWinInputReaderPolicyInterface : public InputReaderPolicyInterface
             sp<SpriteController> sprite_controller(
                 new SpriteController(
                     mLooper,
-                    mTouchPointerVisible));
+                    mTouchPointerLayer));
 
             sp<PointerController> pointer_controller(
                 new PointerController(
@@ -114,8 +114,6 @@ class SkiWinInputReaderPolicyInterface : public InputReaderPolicyInterface
                     sprite_controller));
 
             pointer_controller->setPresentation(PointerControllerInterface::PRESENTATION_SPOT);
-
-            int32_t w, h, o;
 
             auto display = SurfaceComposerClient::getBuiltInDisplay(ISurfaceComposer::eDisplayIdMain);
 
@@ -145,7 +143,7 @@ class SkiWinInputReaderPolicyInterface : public InputReaderPolicyInterface
 
     private:
         sp<Looper> mLooper;
-        int mTouchPointerVisible;
+        int32_t mTouchPointerLayer;
         InputReaderConfiguration mInputReaderConfig;
         Vector<InputDeviceInfo> mInputDevices;
     };

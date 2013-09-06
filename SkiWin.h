@@ -43,6 +43,7 @@
 #include <SkiaSamples/SampleApp.h>
 
 #include "SkiWinEventListener.h"
+#include "SkiWinView.h"
 
 class SkBitmap;
 class SkCanvas;
@@ -81,14 +82,6 @@ class SkiWin : public Thread, public IBinder::DeathRecipient
         virtual void        onFirstRef();
         virtual void        binderDied(const wp<IBinder>& who);
 
-        void drawTitle(const SkString& string,
-                       bool subpixelTextEnabled,
-                       bool lcdRenderTextEnabled);
-
-        SkBitmap::Config convertPixelFormat(PixelFormat format);
-        SkCanvas* lockCanvas(const Rect& dirtyRect);
-        void unlockCanvasAndPost();
-
         bool android();
 
         void checkExit();
@@ -96,13 +89,10 @@ class SkiWin : public Thread, public IBinder::DeathRecipient
         sp<SurfaceComposerClient>       mSession;
 
         int         mWidth;
-        int         mHeight;
+        int         mHeight;      
 
-        sp<SurfaceControl> mFlingerSurfaceControl;
-        sp<Surface> mFlingerSurface;
-
-        SkCanvas mCanvas;
-        int mCanvasSaveCount;
+        sp<SkiWinView> mTitleView;
+        sp<SkiWinView> mContentView;
     };
 
 // ---------------------------------------------------------------------------
