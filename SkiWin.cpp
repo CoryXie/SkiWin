@@ -181,16 +181,16 @@ void SkiWinNotifyMotionCallback(const NotifyMotionArgs* args, void* context)
 
     SkView::Click::State state;
 
-    switch(args->buttonState)
+    switch(args->action)
         {
-        case 0:	   // MotionEvent.ACTION_DOWN
+        case AMOTION_EVENT_ACTION_DOWN:	   // MotionEvent.ACTION_DOWN
             state = SkView::Click::kDown_State;
             break;
-        case 1:	   // MotionEvent.ACTION_UP
-        case 3:	   // MotionEvent.ACTION_CANCEL
+        case AMOTION_EVENT_ACTION_UP:	   // MotionEvent.ACTION_UP
+        case AMOTION_EVENT_ACTION_CANCEL:  // MotionEvent.ACTION_CANCEL
             state = SkView::Click::kUp_State;
             break;
-        case 2:	   // MotionEvent.ACTION_MOVE
+        case AMOTION_EVENT_ACTION_MOVE:	   // MotionEvent.ACTION_MOVE
             state = SkView::Click::kMoved_State;
             break;
         default:
