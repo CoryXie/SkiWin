@@ -64,36 +64,36 @@ void SkEvent::SignalNonEmptyQueue() {}
 ///////////////////////////////////////////
 
 void SkOSWindow::onSetTitle(const char title[])
-{
-printf("View Title %s\n", title);
-}
+    {
+    printf("View Title %s\n", title);
+    }
 
 void SkOSWindow::onHandleInval(const SkIRect& rect)
-{
-}
+    {
+    }
 
 
 void SkOSWindow::onPDFSaved(const char title[], const char desc[],
-        const char path[])
-{
+                            const char path[])
+    {
 
-}
+    }
 
 // ---------------------------------------------------------------------------
 
 int main(int argc, char** argv)
-{
+    {
 #if defined(HAVE_PTHREADS)
-setpriority(PRIO_PROCESS, 0, ANDROID_PRIORITY_DISPLAY);
+    setpriority(PRIO_PROCESS, 0, ANDROID_PRIORITY_DISPLAY);
 #endif
 
-sp<ProcessState> proc(ProcessState::self());
-ProcessState::self()->startThreadPool();
+    sp<ProcessState> proc(ProcessState::self());
+    ProcessState::self()->startThreadPool();
 
-// create the SkiWin object
-sp<SkiWin> boot = new SkiWin();
+    // create the SkiWin object
+    sp<SkiWin> skiwin = new SkiWin();
 
-IPCThreadState::self()->joinThreadPool();
+    IPCThreadState::self()->joinThreadPool();
 
-return 0;
-}
+    return 0;
+    }

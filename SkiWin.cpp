@@ -44,125 +44,242 @@
 #include <gui/SurfaceComposerClient.h>
 
 #include <input/InputWindow.h>
+#include <input/InputReader.h>
 
 #include <core/SkBitmap.h>
 #include <core/SkStream.h>
 #include <images/SkImageDecoder.h>
+#include <utils/android/AndroidKeyToSkKey.h>
 
 #include <GLES/gl.h>
 #include <GLES/glext.h>
 #include <EGL/eglext.h>
 
 #include "SkiWin.h"
-#include "SkiWinConfig.h"
-#include "MessageQueue.h"
+#include "SkiWinEventListener.h"
+#include "SkiWinView.h"
 
 #define LOGW printf
 extern "C" int clock_nanosleep(clockid_t clock_id, int flags,
-                           const struct timespec *request,
-                           struct timespec *remain);
+                               const struct timespec *request,
+                               struct timespec *remain);
 #define EXIT_PROP_NAME "service.skiwin.exit"
-namespace android {
-
-SkOSWindow* gWindow;
+namespace android
+{
 
 // ---dd------------------------------------------------------------------------
 
 SkiWin::SkiWin() : Thread(false)
-{
+    {
+    DisplayInfo dinfo;
+    
+    sp<IBinder> dtoken(SurfaceComposerClient::getBuiltInDisplay(
+                           ISurfaceComposer::eDisplayIdMain));
+
+    status_t status = SurfaceComposerClient::getDisplayInfo(dtoken, &dinfo);
+
+    if (status)
+        {
+        printf("getDisplayInfo failed in %s\n", __PRETTY_FUNCTION__);
+
+        return;
+        }
+
+    mWidth = dinfo.w;
+    mHeight = dinfo.h;
+
     mSession = new SurfaceComposerClient();
 
-#ifdef USE_RAW_EVENT_HUB
-    mEventHub = new EventHub;
-#endif
+    /*
+    |----------------------|
+    |    title view        | 30
+    |----------------------|
+    |                      |
+    |    content view top  | 150
+    |                      |
+    |----------------------|
+    |                      |
+    |    content view mid  | 150
+    |                      |
+    |----------------------|
+    |                      |
+    |    content view bot  | 150
+    |                      |
+    |----------------------|
+    */
+    mTitleView = new SkiWinView(mSession, 
+                   String8("TitleView"),
+                   0, 0, 320, 30, 0x40000000);
+    
+    mContentViewTop = new SkiWinView(mSession, 
+                   String8("ContentViewTop"),
+                   0, 30, 320, 150, 0x40000001);
 
+    mContentViewMid = new SkiWinView(mSession, 
+                   String8("ContentViewMid"),
+                   0, 180, 320, 150, 0x40000002);
+
+    mContentViewBot = new SkiWinView(mSession, 
+                   String8("ContentViewBot"),
+                   0, 330, 320, 150, 0x40000003);
+    
     application_init();
 
-    gWindow = create_sk_window(NULL, 0, 0);  
-}
-
-SkiWin::~SkiWin() {
-}
-
-void SkiWin::onFirstRef() {
-    status_t err = mSession->linkToComposerDeath(this);
-    ALOGE_IF(err, "linkToComposerDeath failed (%s) ", strerror(-err));
-    if (err == NO_ERROR) {
-        run("SkiWin", PRIORITY_DISPLAY);
+    mWindowTop = create_sk_window(NULL, 0, 0);
+    mWindowBot = create_sk_window(NULL, 0, 0);
     }
-}
 
-sp<SurfaceComposerClient> SkiWin::session() const {
-    return mSession;
-}
+SkiWin::~SkiWin()
+    {
+    mSession = NULL;
+    mTitleView = NULL;
+    mContentViewTop = NULL;
+    mContentViewMid = NULL;
+    mContentViewBot = NULL;
+    }
 
+void SkiWin::onFirstRef()
+    {
+    status_t err = mSession->linkToComposerDeath(this);
+
+    ALOGE_IF(err, "linkToComposerDeath failed (%s) ", strerror(-err));
+
+    if (err == NO_ERROR)
+        {
+        ALOGD("Starting SkiWin thread...");
+
+        run("SkiWin", PRIORITY_DISPLAY);
+        }
+    }
 
 void SkiWin::binderDied(const wp<IBinder>& who)
-{
+    {
     // woah, surfaceflinger died!
     ALOGD("SurfaceFlinger died, exiting...");
 
     // calling requestExit() is not enough here because the Surface code
     // might be blocked on a condition variable that will never be updated.
     kill( getpid(), SIGKILL );
+
     requestExit();
-}
+    }
 
-status_t SkiWin::readyToRun() {
+void SkiWinNotifyKeyCallback(const NotifyKeyArgs* args, void* context)
+    {
+#if 0
+    printf("%s\n", __PRETTY_FUNCTION__);
+    ALOGD("notifyKey - eventTime=%lld, deviceId=%d, source=0x%x, policyFlags=0x%x, action=0x%x, "
+          "flags=0x%x, keyCode=0x%x, scanCode=0x%x, metaState=0x%x, downTime=%lld",
+          args->eventTime, args->deviceId, args->source, args->policyFlags,
+          args->action, args->flags, args->keyCode, args->scanCode,
+          args->metaState, args->downTime);
+#endif
+    SkiWin* skiwin = reinterpret_cast<SkiWin*>(context);
+    SkOSWindow* mWindowTop = skiwin->mWindowTop;
+    SkOSWindow* mWindowBot = skiwin->mWindowBot;
+    
+    if (args->action == AKEY_EVENT_ACTION_DOWN)
+        {
+        mWindowTop->handleKey(AndroidKeycodeToSkKey(args->keyCode));
+        /* mWindowTop->handleChar((SkUnichar) uni); */
 
-    sp<IBinder> dtoken(SurfaceComposerClient::getBuiltInDisplay(
-            ISurfaceComposer::eDisplayIdMain));
-    DisplayInfo dinfo;
-    status_t status = SurfaceComposerClient::getDisplayInfo(dtoken, &dinfo);
-    if (status)
-        return -1;
+        mWindowBot->handleKey(AndroidKeycodeToSkKey(args->keyCode));
+        /* mWindowBot->handleChar((SkUnichar) uni); */
+        }
+    else if (args->action == AKEY_EVENT_ACTION_UP)
+        {
+        mWindowTop->handleKeyUp(AndroidKeycodeToSkKey(args->keyCode));
+        mWindowBot->handleKeyUp(AndroidKeycodeToSkKey(args->keyCode));
+        }
+    }
 
-    // create the native surface
-    sp<SurfaceControl> control = session()->createSurface(String8("SkiWin"),
-            dinfo.w, dinfo.h, PIXEL_FORMAT_RGB_565);
+void SkiWinNotifyMotionCallback(const NotifyMotionArgs* args, void* context)
+    {
+#if 0
+    ALOGD("notifyMotion - eventTime=%lld, deviceId=%d, source=0x%x, policyFlags=0x%x, "
+          "action=0x%x, flags=0x%x, metaState=0x%x, buttonState=0x%x, edgeFlags=0x%x, "
+          "xPrecision=%f, yPrecision=%f, downTime=%lld",
+          args->eventTime, args->deviceId, args->source, args->policyFlags,
+          args->action, args->flags, args->metaState, args->buttonState,
+          args->edgeFlags, args->xPrecision, args->yPrecision, args->downTime);
+    for (uint32_t i = 0; i < args->pointerCount; i++)
+        {
+        ALOGD("  Pointer %d: id=%d, toolType=%d, "
+              "x=%f, y=%f, pressure=%f, size=%f, "
+              "touchMajor=%f, touchMinor=%f, toolMajor=%f, toolMinor=%f, "
+              "orientation=%f",
+              i, args->pointerProperties[i].id,
+              args->pointerProperties[i].toolType,
+              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_X),
+              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_Y),
+              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_PRESSURE),
+              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_SIZE),
+              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR),
+              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR),
+              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOOL_MAJOR),
+              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOOL_MINOR),
+              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_ORIENTATION));
+        }
+#endif
+    int32_t x = int32_t(args->pointerCoords[0].getAxisValue(AMOTION_EVENT_AXIS_X));
+    int32_t y = int32_t(args->pointerCoords[0].getAxisValue(AMOTION_EVENT_AXIS_Y));
+    SkiWin* skiwin = reinterpret_cast<SkiWin*>(context);
+    SkOSWindow* mWindowTop = skiwin->mWindowTop;
+    SkOSWindow* mWindowBot = skiwin->mWindowBot;
 
-    SurfaceComposerClient::openGlobalTransaction();
-    control->setLayer(0x40000000);
-    SurfaceComposerClient::closeGlobalTransaction();
+    SkView::Click::State state;
 
-    sp<Surface> surface = control->getSurface();
+    switch(args->action)
+        {
+        case AMOTION_EVENT_ACTION_DOWN:	   // MotionEvent.ACTION_DOWN
+            state = SkView::Click::kDown_State;
+            break;
+        case AMOTION_EVENT_ACTION_UP:	   // MotionEvent.ACTION_UP
+        case AMOTION_EVENT_ACTION_CANCEL:  // MotionEvent.ACTION_CANCEL
+            state = SkView::Click::kUp_State;
+            break;
+        case AMOTION_EVENT_ACTION_MOVE:	   // MotionEvent.ACTION_MOVE
+            state = SkView::Click::kMoved_State;
+            break;
+        default:
+            SkDebugf("motion event ignored\n");
+            return;
+        }
 
-    mWidth = dinfo.w;
-    mHeight = dinfo.h;
-    mFlingerSurfaceControl = control;
-    mFlingerSurface = surface;
+    mWindowTop->handleClick(x, y, state);
+    mWindowBot->handleClick(x, y - 330, state);    
+    }
 
-#ifndef USE_RAW_EVENT_HUB
-	status_t result = InputChannel::openInputChannelPair(String8("SkiWin"),
-			serverChannel, clientChannel);
-	
-	mMessageQueue = new SkiWinMessageQueue();
+void SkiWinNotifySwitchCallback(const NotifySwitchArgs* args, void* context)
+    {    
+    SkiWin* skiwin = reinterpret_cast<SkiWin*>(context);
+    SkOSWindow* gWindow = skiwin->mWindowTop;
+    printf("%s\n", __PRETTY_FUNCTION__);
+    }
 
-	appHandle = new SkiWinInputApplicationHandle(reinterpret_cast<int>(this));
-	winHandle = new SkiWinInputWindowHandle(reinterpret_cast<int>(this), appHandle);
-	
-	windowHandles.add(winHandle);
-	
-	mSkiInputManager = SkiWinInputManagerInit(NULL, NULL, mMessageQueue);
+SkiWinEventCallback gInputEventCallback;
 
-	SkiWinInputManagerSetWin(mSkiInputManager, reinterpret_cast<int>(this));
+status_t SkiWin::readyToRun()
+    {
+    gInputEventCallback.pfNotifyKey = SkiWinNotifyKeyCallback;
+    gInputEventCallback.pfNotifyMotion = SkiWinNotifyMotionCallback;
+    gInputEventCallback.pfNotifySwitch = SkiWinNotifySwitchCallback;
+    gInputEventCallback.context = this;
 
-	SkiWinInputManagerRegisterInputChannel(mSkiInputManager, 
-										   clientChannel,
-										   winHandle,
-										   true);
-										  
-	SkiWinInputManagerStart(mSkiInputManager);
+    SkiWinInputConfiguration config =
+        {
+        touchPointerVisible : true,
+        touchPointerLayer : 0x40000005
+        };
 
-    //mInputEventSink = new SkiWinInputEventSink(static_cast<const void *>(this));
-	//SkiWinInputEventReceiverInit(mInputEventSink, clientChannel, mMessageQueue);
+    SkiWinInputManagerInit(&gInputEventCallback, &config);
+    SkiWinInputManagerStart();
 
-#endif /* */
     return NO_ERROR;
-}
+    }
 
 bool SkiWin::threadLoop()
-{
+    {
     bool r;
 
     r = android();
@@ -170,358 +287,106 @@ bool SkiWin::threadLoop()
     // No need to force exit anymore
     property_set(EXIT_PROP_NAME, "0");
 
-    mFlingerSurface.clear();
-    mFlingerSurfaceControl.clear();
-   
     IPCThreadState::self()->stopProcess();
+
     return r;
-}
+    }
 
-#ifdef USE_RAW_EVENT_HUB
-
-void SkiWin::processEvent(const RawEvent& rawEvent) {
-	String8 name = mEventHub->getDeviceIdentifier(rawEvent.deviceId).name;
-	switch (rawEvent.type) {
-	case EventHubInterface::DEVICE_ADDED:
-		LOGW("add:%s\n",name.string());
-		break;
-
-	case EventHubInterface::DEVICE_REMOVED:
-		LOGW("add:%s\n",name.string());
-		break;
-
-	case EventHubInterface::FINISHED_DEVICE_SCAN:
-		LOGW("finished scan:%s\n",name.string());
-		break;
-
-	default:
-		consumeEvent(rawEvent);
-		break;
-	}
-}
-void SkiWin::consumeEvent(const RawEvent& rawEvent) {
-	switch (rawEvent.type) {
-	case EV_ABS:
-		if (!waiting) {
-			waiting = true;
-			mTouchEvent.type = TouchEvent::Moving;
-		}
-		switch (rawEvent.code) {
-		case ABS_X:
-			mTouchEvent.x = rawEvent.value;
-			break;
-		case ABS_Y:
-			mTouchEvent.y = rawEvent.value;
-			break;
-		case ABS_PRESSURE:
-			mTouchEvent.type = (rawEvent.value == 1 ? TouchEvent::Down
-					: TouchEvent::Up);
-			break;
-		}
-		break;
-	case EV_SYN:
-		switch (rawEvent.code) {
-		case SYN_REPORT:
-			if (waiting) {
-				printTouchEventType();
-				eventBuffer.push_back(mTouchEvent);
-				waiting = false;
-			}
-			break;
-		}
-		break;
-	}
-}
-
-void SkiWin::printTouchEventType() {
-	switch (mTouchEvent.type) {
-	case TouchEvent::Down:
-		LOGW("down:%d,%d\n",mTouchEvent.x,mTouchEvent.y);
-                gWindow->handleClick(mTouchEvent.x, mTouchEvent.y, SkView::Click::kDown_State);
-		break;
-	case TouchEvent::Up:
-		LOGW("up:%d,%d\n",mTouchEvent.x,mTouchEvent.y);
-		gWindow->handleClick(mTouchEvent.x, mTouchEvent.y, SkView::Click::kUp_State);
-		break;
-	case TouchEvent::Moving:
-		LOGW("moving:%d,%d\n",mTouchEvent.x,mTouchEvent.y);
-		gWindow->handleClick(mTouchEvent.x, mTouchEvent.y, SkView::Click::kMoved_State);
-		break;
-	}
-}
-#else
-
-SkiWinInputEventSink::SkiWinInputEventSink(const void * win)
-	{
-  	mWin = win;
-	}
-
-bool SkiWinInputEventSink::dispatchBatchedInputEventPending()
-	{
-	return false;
-	}
-
-bool SkiWinInputEventSink::dispatchInputEvent(int seq, KeyEvent* event)
-	{
-	LOGW("dispatchInputEvent KeyEvent seq-%d\n",seq);
-
-	return true;
-	}
-
-bool SkiWinInputEventSink::dispatchInputEvent(int seq, MotionEvent* event)
-	{
-	LOGW("dispatchInputEvent MotionEvent seq-%d\n",seq);
-
-	return true;
-	}
-
-bool SkiWin::updateInputWindowInfo(struct InputWindowInfo *mInfo)
-	{
-	LOGW("updateInputWindowInfo %p\n",mInfo);
-
-    mInfo->inputChannel = clientChannel;
-
-    mInfo->name.setTo("SkiWin");
-
-    mInfo->layoutParamsFlags =    FLAG_KEEP_SCREEN_ON
-	   							| FLAG_LAYOUT_IN_SCREEN
-	   							| FLAG_LAYOUT_NO_LIMITS;
-    mInfo->layoutParamsType = TYPE_BASE_APPLICATION;
-    mInfo->dispatchingTimeout = DEFAULT_INPUT_DISPATCHING_TIMEOUT_NANOS;
-    mInfo->frameLeft = 0;
-    mInfo->frameTop = 0;
-    mInfo->frameRight = mWidth;
-    mInfo->frameBottom = mHeight;
-    mInfo->scaleFactor = 1;
-
-	SkIRect r;
-
-	r.set(0, 0, mWidth, mHeight);
-
-    SkRegion region(r); ;
-    mInfo->touchableRegion.set(region);
-
-    mInfo->visible = true;
-    mInfo->canReceiveKeys = true;
-    mInfo->hasFocus = true;
-    mInfo->hasWallpaper = false;
-    mInfo->paused = false;
-    mInfo->layer = -1;
-    mInfo->ownerPid = getpid();
-    mInfo->ownerUid = getuid();
-    mInfo->inputFeatures = 0;
-    mInfo->displayId = 0;
-    
-	return true;
-	}
-
-void SkiWin::notifySwitch(nsecs_t when,
-	uint32_t switchValues, uint32_t switchMask)
-	{
-	LOGW("notifySwitch when %d switchValues %d switchMask %d\n", 
-		when, switchValues, switchMask);
-	return;
-	}
-
-void SkiWin::notifyConfigurationChanged(nsecs_t when)
-	{
-	LOGW("notifyConfigurationChanged when %d \n", when);
-
-	return;
-	}
-
-nsecs_t SkiWin::notifyANR(const sp<InputApplicationHandle>& inputApplicationHandle,
-	const sp<InputWindowHandle>& inputWindowHandle)
-	{
-	LOGW("notifyANR inputApplicationHandle %p inputWindowHandle %p\n", 
-		inputApplicationHandle.get(), inputWindowHandle.get());
-	return 0;
-	}
-
-nsecs_t SkiWin::interceptKeyBeforeDispatching(
-        const sp<InputWindowHandle>& inputWindowHandle,
-        const KeyEvent* keyEvent, uint32_t policyFlags)
-	{
-	LOGW("interceptKeyBeforeDispatching inputWindowHandle %p keyEvent %p policyFlags 0x%x\n", 
-		inputWindowHandle.get(), keyEvent, policyFlags);
-	return 0;	
-	}
-
-void SkiWin::notifyInputChannelBroken(const sp<InputWindowHandle>& inputWindowHandle)
-	{
-	LOGW("notifyInputChannelBroken inputWindowHandle %p\n", 
-		inputWindowHandle.get());
-	return ;
-	}
-
-bool SkiWin::filterInputEvent(const KeyEvent* keyEvent)
-	{
-	LOGW("filterInputEvent KeyEvent %p\n", 
-		keyEvent);
-
-	return true;
-	}
-
-bool SkiWin::filterInputEvent(const MotionEvent* motionEvent)
-	{
-	LOGW("filterInputEvent MotionEvent %p\n", 
-		motionEvent);
-
-	return true;
-	}
-
-int SkiWin::interceptKeyBeforeQueueing(const KeyEvent* keyEvent,
-	uint32_t& policyFlags, bool screenOn)
-	{
-	LOGW("interceptKeyBeforeQueueing keyEvent %p policyFlags 0x%x screenOn %d\n", 
-		keyEvent, policyFlags, screenOn);
-
-	return 0;
-	}
-
-int SkiWin::interceptMotionBeforeQueueingWhenScreenOff(uint32_t& policyFlags)
-	{
-	LOGW("interceptMotionBeforeQueueingWhenScreenOff policyFlags 0x%x\n", 
-		policyFlags);
-
-	return 0;
-	}
-
-KeyEvent* SkiWin::dispatchUnhandledKey(const sp<InputWindowHandle>& inputWindowHandle,
-	const KeyEvent* keyEvent, uint32_t policyFlags)
-	{
-	LOGW("dispatchUnhandledKey inputWindowHandle %p keyEvent %p policyFlags 0x%x\n", 
-		inputWindowHandle.get(),keyEvent, policyFlags);
-
-	return NULL;
-	}
-
-bool SkiWin::checkInjectEventsPermission(
-	int32_t injectorPid, int32_t injectorUid)
-	{
-	LOGW("checkInjectEventsPermission injectorPid 0x%x injectorUid 0x%x\n", 
-		injectorPid, injectorUid);
-
-	return true;
-	}
-
-#endif /* USE_RAW_EVENT_HUB */
-
-SkBitmap::Config SkiWin::convertPixelFormat(PixelFormat format) {
-	/* note: if PIXEL_FORMAT_RGBX_8888 means that all alpha bytes are 0xFF, then
-	 we can map to SkBitmap::kARGB_8888_Config, and optionally call
-	 bitmap.setIsOpaque(true) on the resulting SkBitmap (as an accelerator)
-	 */
-	switch (format) {
-	case PIXEL_FORMAT_RGBX_8888:
-		return SkBitmap::kARGB_8888_Config;
-	case PIXEL_FORMAT_RGBA_8888:
-		return SkBitmap::kARGB_8888_Config;
-	case PIXEL_FORMAT_RGBA_4444:
-		return SkBitmap::kARGB_4444_Config;
-	case PIXEL_FORMAT_RGB_565:
-		return SkBitmap::kRGB_565_Config;
-	case PIXEL_FORMAT_A_8:
-		return SkBitmap::kA8_Config;
-	default:
-		return SkBitmap::kNo_Config;
-	}
-}
-
-SkCanvas* SkiWin::lockCanvas(const Rect& dirtyRect) {
-	// get dirty region
-	Region dirtyRegion;
-	if (!dirtyRect.isEmpty()) {
-		dirtyRegion.set(dirtyRect);
-	}
-	Surface::SurfaceInfo info;
-	status_t err = mFlingerSurface->lock(&info, &dirtyRegion);
-	assert(err == 0);
-	SkBitmap bitmap;
-	ssize_t bpr = info.s * bytesPerPixel(info.format);
-	bitmap.setConfig(convertPixelFormat(info.format), info.w, info.h, bpr);
-	if (info.format == PIXEL_FORMAT_RGBX_8888) {
-		bitmap.setIsOpaque(true);
-	}
-	if (info.w > 0 && info.h > 0) {
-		bitmap.setPixels(info.bits);
-	} else {
-		// be safe with an empty bitmap.
-		bitmap.setPixels(NULL);
-	}
-	canvas.setBitmapDevice(bitmap);
-
-	saveCount = canvas.save();
-	return &canvas;
-}
-
-void SkiWin::unlockCanvasAndPost() {
-	// detach the canvas from the surface
-	canvas.restoreToCount(saveCount);
-	canvas.setBitmapDevice(SkBitmap());
-	// unlock surface
-	status_t err = mFlingerSurface->unlockAndPost();
-	assert(err == 0);
-}
 bool SkiWin::android()
-{
+    {
+    SkCanvas* contentCanvasTop;
+    SkCanvas* contentCanvasMid;
+    SkCanvas* contentCanvasBot;
+    SkBitmap bitmap;
 
-    const nsecs_t startTime = systemTime();
-	
     Rect rect(mWidth, mHeight);
-	
-    gWindow->resize(mWidth, mHeight);
-	
-    int numViews = getSampleCount(gWindow);
-    int i = 0;
-    int index = 0;
-	
-    do {
-        nsecs_t now = systemTime();
-        double time = now - startTime;
-		
-	#ifdef USE_RAW_EVENT_HUB	
-		RawEvent event;
-		mEventHub->getEvents(-1, &event, 1);
-		processEvent(event);
-	#else
-	    SkiWinInputManagerSetFocusedApplication(mSkiInputManager, appHandle);
-	    SkiWinInputManagerSetInputWindows(mSkiInputManager, windowHandles);
-	#endif
-	
-		SkCanvas* canvas = lockCanvas(rect);
 
-		index = i++ % numViews;
+    mWindowTop->resize(320, 150);
+    mWindowBot->resize(320, 150);
+    
+    do
+        {
+        mWindowTop->update(NULL);
+        mWindowBot->update(NULL);
 
-    	loadSample(gWindow, index);
+        SkCanvas* titileCanvas = mTitleView->lockCanvas(rect);
+        if (titileCanvas)
+            {
+            SkPaint paint;
+            const char * title = mWindowTop->getTitle();
+            
+            paint.setColor(SK_ColorWHITE);
+            paint.setDither(true);
+            paint.setAntiAlias(true);
+            paint.setSubpixelText(true);
+            paint.setLCDRenderText(true);
+            paint.setTextSize(25);
+                        
+            titileCanvas->clear(SK_ColorBLACK);
+            
+            titileCanvas->drawText(title, strlen(title), 15, 25, paint);
+            }
+        mTitleView->unlockCanvasAndPost();
+        
+        contentCanvasTop = mContentViewTop->lockCanvas(rect);
+        if (contentCanvasTop)
+            {            
+            contentCanvasTop->drawBitmap(mWindowTop->getBitmap(), 0, 30);
+            }
+        mContentViewTop->unlockCanvasAndPost();
+        
+        contentCanvasMid = mContentViewMid->lockCanvas(rect);
+        if (contentCanvasMid)
+            {    
+            SkPaint paint;
+            int color = 0xff00ff77;
+            paint.setARGB(color>>24 & 0xff, 
+                          color>>16 & 0xff, 
+                          color>>8 & 0xff, 
+                          color & 0xff);
+            
+            SkRect rect1;
+            rect1.fLeft = 100;
+            rect1.fTop = 0;
+            rect1.fRight = 300;
+            rect1.fBottom = 120;
 
-    	gWindow->update(NULL);
+            contentCanvasMid->drawRect(rect1, paint);         
+            //contentCanvasMid->drawBitmap(mWindowTop->getBitmap(), 0, 0);
+            contentCanvasMid->drawLine(100, 0, 100, 480, paint);
+            }
+        mContentViewMid->unlockCanvasAndPost();   
 
-    	canvas->drawBitmap(gWindow->getBitmap(), 0, 0);
+        contentCanvasBot = mContentViewBot->lockCanvas(rect);
+        if (contentCanvasBot)
+            {            
+            contentCanvasBot->drawBitmap(mWindowBot->getBitmap(), 0, 0);
+            }
+        mContentViewBot->unlockCanvasAndPost(); 
 
-		unlockCanvasAndPost();
-		
-        #ifndef  USE_RAW_EVENT_HUB
-        sleep(3);
-        #endif
+        usleep(100000);        
 
         checkExit();
-    } while (!exitPending());
+        }
+    while (!exitPending());
 
     return false;
-}
+    }
 
 
-void SkiWin::checkExit() {
+void SkiWin::checkExit()
+    {
     // Allow surface flinger to gracefully request shutdown
     char value[PROPERTY_VALUE_MAX];
-    property_get(EXIT_PROP_NAME, value, "0");
-    int exitnow = atoi(value);
-    if (exitnow) {
-        requestExit();
-    }
-}
-// ---------------------------------------------------------------------------
 
-}
-; // namespace android
+    property_get(EXIT_PROP_NAME, value, "0");
+
+    int exitnow = atoi(value);
+
+    if (exitnow)
+        {
+        requestExit();
+        }
+    }
+}; // namespace android
+

@@ -22,26 +22,29 @@
 #include "SkDither.h"
 
 // exercise scale/linear/devkern
-struct Setting {
+struct Setting
+    {
     SkScalar    fScale;
     bool        fLinearText;
     bool        fDevKernText;
-};
+    };
 
 static const SkScalar ONE = SkIntToScalar(9999)/10000;
 
-static const Setting gSettings[] = {
-    { 0,            false,  false   },
-    { 0,            false,  true    },
-    { 0,            true,   false   },
-    { 0,            true,   true    },
-    { ONE,   false,  false   },
-    { ONE,   false,  true    },
-    { ONE,   true,   false   },
-    { ONE,   true,   true    }
-};
+static const Setting gSettings[] =
+    {
+        { 0,            false,  false   },
+        { 0,            false,  true    },
+        { 0,            true,   false   },
+        { 0,            true,   true    },
+        { ONE,   false,  false   },
+        { ONE,   false,  true    },
+        { ONE,   true,   false   },
+        { ONE,   true,   true    }
+    };
 
-static void doMeasure(SkCanvas* canvas, const SkPaint& paint, const char text[]) {
+static void doMeasure(SkCanvas* canvas, const SkPaint& paint, const char text[])
+    {
     SkScalar    dy = paint.getFontMetrics(NULL);
 
     size_t      len = strlen(text);
@@ -52,14 +55,15 @@ static void doMeasure(SkCanvas* canvas, const SkPaint& paint, const char text[])
     SkRect      bounds;
 
     SkPaint p(paint);
-    for (size_t i = 0; i < SK_ARRAY_COUNT(gSettings); i++) {
+    for (size_t i = 0; i < SK_ARRAY_COUNT(gSettings); i++)
+        {
         p.setLinearText(gSettings[i].fLinearText);
         p.setDevKernText(gSettings[i].fDevKernText);
         SkScalar scale = gSettings[i].fScale;
-        
+
         int n = p.getTextWidths(text, len, widths, rects);
         SkScalar w = p.measureText(text, len, &bounds, scale);
-        
+
         p.setStyle(SkPaint::kFill_Style);
         p.setColor(0x8888FF88);
         canvas->drawRect(bounds, p);
@@ -70,53 +74,62 @@ static void doMeasure(SkCanvas* canvas, const SkPaint& paint, const char text[])
         p.setStrokeWidth(0);
         p.setColor(0xFFFF0000);
         SkScalar x = 0;
-        for (int j = 0; j < n; j++) {
+        for (int j = 0; j < n; j++)
+            {
             SkRect r = rects[j];
             r.offset(x, 0);
             canvas->drawRect(r, p);
             x += widths[j];
-        }
+            }
 
         p.setColor(0xFF0000FF);
         canvas->drawLine(0, 0, w, 0, p);
         p.setStrokeWidth(SkIntToScalar(4));
         canvas->drawPoint(x, 0, p);
-        
+
         canvas->translate(0, dy);
-    }
-}
-
-class MeasureView : public SampleView {
-public:
-    SkPaint fPaint;
-
-	MeasureView() {
-        fPaint.setAntiAlias(true);
-        fPaint.setTextSize(SkIntToScalar(64));
-        this->setBGColor(0xFFDDDDDD);
-    }
-
-protected:
-    // overrides from SkEventSink
-    virtual bool onQuery(SkEvent* evt) {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "Measure");
-            return true;
         }
-        return this->INHERITED::onQuery(evt);
     }
-    
-    virtual void onDrawContent(SkCanvas* canvas) {
-        canvas->translate(fPaint.getTextSize(), fPaint.getTextSize());
-        doMeasure(canvas, fPaint, "Hamburgefons");
-    }
-    
-private:
-    typedef SampleView INHERITED;
-};
+
+class MeasureView : public SampleView
+    {
+    public:
+        SkPaint fPaint;
+
+        MeasureView()
+            {
+            fPaint.setAntiAlias(true);
+            fPaint.setTextSize(SkIntToScalar(64));
+            this->setBGColor(0xFFDDDDDD);
+            }
+
+    protected:
+        // overrides from SkEventSink
+        virtual bool onQuery(SkEvent* evt)
+            {
+            if (SampleCode::TitleQ(*evt))
+                {
+                SampleCode::TitleR(evt, "Measure");
+                return true;
+                }
+            return this->INHERITED::onQuery(evt);
+            }
+
+        virtual void onDrawContent(SkCanvas* canvas)
+            {
+            canvas->translate(fPaint.getTextSize(), fPaint.getTextSize());
+            doMeasure(canvas, fPaint, "Hamburgefons");
+            }
+
+    private:
+        typedef SampleView INHERITED;
+    };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new MeasureView; }
+static SkView* MyFactory()
+    {
+    return new MeasureView;
+    }
 static SkViewRegister reg(MyFactory);
 

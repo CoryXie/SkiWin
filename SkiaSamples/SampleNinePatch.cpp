@@ -10,22 +10,26 @@
 #include "SkPaint.h"
 #include "SkGpuDevice.h"
 
-static void make_bitmap(SkBitmap* bitmap, GrContext* ctx, SkIRect* center) {
+static void make_bitmap(SkBitmap* bitmap, GrContext* ctx, SkIRect* center)
+    {
     SkDevice* dev;
     SkCanvas canvas;
-    
+
     const int kFixed = 28;
     const int kStretchy = 8;
     const int kSize = 2*kFixed + kStretchy;
 
-    if (ctx) {
+    if (ctx)
+        {
         dev = new SkGpuDevice(ctx, SkBitmap::kARGB_8888_Config, kSize, kSize);
         *bitmap = dev->accessBitmap(false);
-    } else {
+        }
+    else
+        {
         bitmap->setConfig(SkBitmap::kARGB_8888_Config, kSize, kSize);
         bitmap->allocPixels();
         dev = new SkDevice(*bitmap);
-    }
+        }
 
     canvas.setDevice(dev)->unref();
     canvas.clear(0);
@@ -47,63 +51,73 @@ static void make_bitmap(SkBitmap* bitmap, GrContext* ctx, SkIRect* center) {
     r.setXYWH(0, SkIntToScalar(kFixed), SkIntToScalar(kSize), SkIntToScalar(kStretchy));
     paint.setColor(0x880000FF);
     canvas.drawRect(r, paint);
-}
-
-
-class NinePatchView : public SampleView {
-public:
-	NinePatchView() {}
-
-protected:
-    // overrides from SkEventSink
-    virtual bool onQuery(SkEvent* evt) {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "NinePatch");
-            return true;
-        }
-        return this->INHERITED::onQuery(evt);
     }
 
-    virtual void onDrawContent(SkCanvas* canvas) {
-        SkBitmap bm;
-        SkIRect center;
-        make_bitmap(&bm, SampleCode::GetGr(), &center);
 
-        // amount of bm that should not be stretched (unless we have to)
-        const SkScalar fixed = SkIntToScalar(bm.width() - center.width());
+class NinePatchView : public SampleView
+    {
+    public:
+        NinePatchView() {}
 
-        const SkTSize<SkScalar> size[] = {
-            { fixed * 4 / 5, fixed * 4 / 5 },   // shrink in both axes
-            { fixed * 4 / 5, fixed * 4 },       // shrink in X
-            { fixed * 4,     fixed * 4 / 5 },   // shrink in Y
-            { fixed * 4,     fixed * 4 }
-        };
-
-        canvas->drawBitmap(bm, SkIntToScalar(10), SkIntToScalar(10), NULL);
-
-        SkScalar x = SkIntToScalar(100);
-        SkScalar y = SkIntToScalar(100);
-
-        SkPaint paint;
-        paint.setFilterBitmap(true);
-
-        for (int iy = 0; iy < 2; ++iy) {
-            for (int ix = 0; ix < 2; ++ix) {
-                int i = ix * 2 + iy;
-                SkRect r = SkRect::MakeXYWH(x + ix * fixed, y + iy * fixed,
-                                            size[i].width(), size[i].height());
-                canvas->drawBitmapNine(bm, center, r, &paint);
+    protected:
+        // overrides from SkEventSink
+        virtual bool onQuery(SkEvent* evt)
+            {
+            if (SampleCode::TitleQ(*evt))
+                {
+                SampleCode::TitleR(evt, "NinePatch");
+                return true;
+                }
+            return this->INHERITED::onQuery(evt);
             }
-        }
-    }
-    
-private:
-    SkScalar fX, fY;
-    typedef SampleView INHERITED;
-};
+
+        virtual void onDrawContent(SkCanvas* canvas)
+            {
+            SkBitmap bm;
+            SkIRect center;
+            make_bitmap(&bm, SampleCode::GetGr(), &center);
+
+            // amount of bm that should not be stretched (unless we have to)
+            const SkScalar fixed = SkIntToScalar(bm.width() - center.width());
+
+            const SkTSize<SkScalar> size[] =
+                {
+                    { fixed * 4 / 5, fixed * 4 / 5 },   // shrink in both axes
+                    { fixed * 4 / 5, fixed * 4 },       // shrink in X
+                    { fixed * 4,     fixed * 4 / 5 },   // shrink in Y
+                    { fixed * 4,     fixed * 4 }
+                };
+
+            canvas->drawBitmap(bm, SkIntToScalar(10), SkIntToScalar(10), NULL);
+
+            SkScalar x = SkIntToScalar(100);
+            SkScalar y = SkIntToScalar(100);
+
+            SkPaint paint;
+            paint.setFilterBitmap(true);
+
+            for (int iy = 0; iy < 2; ++iy)
+                {
+                for (int ix = 0; ix < 2; ++ix)
+                    {
+                    int i = ix * 2 + iy;
+                    SkRect r = SkRect::MakeXYWH(x + ix * fixed, y + iy * fixed,
+                                                size[i].width(), size[i].height());
+                    canvas->drawBitmapNine(bm, center, r, &paint);
+                    }
+                }
+            }
+
+    private:
+        SkScalar fX, fY;
+        typedef SampleView INHERITED;
+    };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new NinePatchView; }
+static SkView* MyFactory()
+    {
+    return new NinePatchView;
+    }
 static SkViewRegister reg(MyFactory);
 

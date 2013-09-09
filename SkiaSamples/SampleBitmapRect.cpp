@@ -26,18 +26,22 @@
 
 #include "SkGpuDevice.h"
 
-static void make_bitmap(SkBitmap* bitmap, GrContext* ctx) {
+static void make_bitmap(SkBitmap* bitmap, GrContext* ctx)
+    {
     SkCanvas canvas;
 
-    if (ctx) {
+    if (ctx)
+        {
         SkDevice* dev = new SkGpuDevice(ctx, SkBitmap::kARGB_8888_Config, 64, 64);
         canvas.setDevice(dev)->unref();
         *bitmap = dev->accessBitmap(false);
-    } else {
+        }
+    else
+        {
         bitmap->setConfig(SkBitmap::kARGB_8888_Config, 64, 64);
         bitmap->allocPixels();
         canvas.setBitmapDevice(*bitmap);
-    }
+        }
 
     canvas.drawColor(SK_ColorRED);
     SkPaint paint;
@@ -45,66 +49,76 @@ static void make_bitmap(SkBitmap* bitmap, GrContext* ctx) {
     const SkPoint pts[] = { { 0, 0 }, { 64, 64 } };
     const SkColor colors[] = { SK_ColorWHITE, SK_ColorBLUE };
     paint.setShader(SkGradientShader::CreateLinear(pts, colors, NULL, 2,
-                                                   SkShader::kClamp_TileMode))->unref();
+                    SkShader::kClamp_TileMode))->unref();
     canvas.drawCircle(32, 32, 32, paint);
-}
-
-class BitmapRectView : public SampleView {
-public:
-	BitmapRectView() {
-        this->setBGColor(SK_ColorGRAY);
     }
-    
-protected:
-    // overrides from SkEventSink
-    virtual bool onQuery(SkEvent* evt) {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "BitmapRect");
-            return true;
-        }
-        return this->INHERITED::onQuery(evt);
-    }
-    
-    virtual void onDrawContent(SkCanvas* canvas) {
-        GrContext* ctx = SampleCode::GetGr();
 
-        const SkIRect src[] = {
-            { 0, 0, 32, 32 },
-            { 0, 0, 80, 80 },
-            { 32, 32, 96, 96 },
-            { -32, -32, 32, 32, }
-        };
+class BitmapRectView : public SampleView
+    {
+    public:
+        BitmapRectView()
+            {
+            this->setBGColor(SK_ColorGRAY);
+            }
 
-        SkPaint paint;
-        paint.setStyle(SkPaint::kStroke_Style);
-        paint.setColor(ctx ? SK_ColorGREEN : SK_ColorYELLOW);
+    protected:
+        // overrides from SkEventSink
+        virtual bool onQuery(SkEvent* evt)
+            {
+            if (SampleCode::TitleQ(*evt))
+                {
+                SampleCode::TitleR(evt, "BitmapRect");
+                return true;
+                }
+            return this->INHERITED::onQuery(evt);
+            }
 
-        SkBitmap bitmap;
-        make_bitmap(&bitmap, ctx);
+        virtual void onDrawContent(SkCanvas* canvas)
+            {
+            GrContext* ctx = SampleCode::GetGr();
 
-        SkRect dstR = { 0, 200, 128, 380 };
+            const SkIRect src[] =
+                {
+                    { 0, 0, 32, 32 },
+                    { 0, 0, 80, 80 },
+                    { 32, 32, 96, 96 },
+                    { -32, -32, 32, 32, }
+                };
 
-        canvas->translate(16, 40);
-        for (size_t i = 0; i < SK_ARRAY_COUNT(src); i++) {
-            SkRect srcR;
-            srcR.set(src[i]);
+            SkPaint paint;
+            paint.setStyle(SkPaint::kStroke_Style);
+            paint.setColor(ctx ? SK_ColorGREEN : SK_ColorYELLOW);
 
-            canvas->drawBitmap(bitmap, 0, 0, &paint);
-            canvas->drawBitmapRect(bitmap, &src[i], dstR, &paint);
+            SkBitmap bitmap;
+            make_bitmap(&bitmap, ctx);
 
-            canvas->drawRect(dstR, paint);
-            canvas->drawRect(srcR, paint);
-            
-            canvas->translate(160, 0);
-        }
-    }
-    
-private:
-    typedef SkView INHERITED;
-};
+            SkRect dstR = { 0, 200, 128, 380 };
+
+            canvas->translate(16, 40);
+            for (size_t i = 0; i < SK_ARRAY_COUNT(src); i++)
+                {
+                SkRect srcR;
+                srcR.set(src[i]);
+
+                canvas->drawBitmap(bitmap, 0, 0, &paint);
+                canvas->drawBitmapRect(bitmap, &src[i], dstR, &paint);
+
+                canvas->drawRect(dstR, paint);
+                canvas->drawRect(srcR, paint);
+
+                canvas->translate(160, 0);
+                }
+            }
+
+    private:
+        typedef SkView INHERITED;
+    };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new BitmapRectView; }
+static SkView* MyFactory()
+    {
+    return new BitmapRectView;
+    }
 static SkViewRegister reg(MyFactory);
 

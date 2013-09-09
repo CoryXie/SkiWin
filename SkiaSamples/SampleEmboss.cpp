@@ -26,48 +26,56 @@
 #include "SkTypeface.h"
 #include "SkXfermode.h"
 
-class EmbossView : public SampleView {
-    SkEmbossMaskFilter::Light   fLight;
-public:
-	EmbossView() {
-        fLight.fDirection[0] = SK_Scalar1;
-        fLight.fDirection[1] = SK_Scalar1;
-        fLight.fDirection[2] = SK_Scalar1;
-        fLight.fAmbient = 128;
-        fLight.fSpecular = 16*2;
-    }
-    
-protected:
-    // overrides from SkEventSink
-    virtual bool onQuery(SkEvent* evt) {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "Emboss");
-            return true;
-        }
-        return this->INHERITED::onQuery(evt);
-    }
+class EmbossView : public SampleView
+    {
+        SkEmbossMaskFilter::Light   fLight;
+    public:
+        EmbossView()
+            {
+            fLight.fDirection[0] = SK_Scalar1;
+            fLight.fDirection[1] = SK_Scalar1;
+            fLight.fDirection[2] = SK_Scalar1;
+            fLight.fAmbient = 128;
+            fLight.fSpecular = 16*2;
+            }
 
-    virtual void onDrawContent(SkCanvas* canvas) {
-        SkPaint paint;
-        
-        paint.setAntiAlias(true);
-        paint.setStyle(SkPaint::kStroke_Style);
-        paint.setStrokeWidth(SkIntToScalar(10));
-        paint.setMaskFilter(new SkEmbossMaskFilter(fLight, SkIntToScalar(4)))->unref();
-        paint.setShader(new SkColorShader(SK_ColorBLUE))->unref();
-        paint.setDither(true);
-        
-        canvas->drawCircle(SkIntToScalar(50), SkIntToScalar(50),
-                           SkIntToScalar(30), paint);
-    }
-    
-private:
+    protected:
+        // overrides from SkEventSink
+        virtual bool onQuery(SkEvent* evt)
+            {
+            if (SampleCode::TitleQ(*evt))
+                {
+                SampleCode::TitleR(evt, "Emboss");
+                return true;
+                }
+            return this->INHERITED::onQuery(evt);
+            }
 
-    typedef SampleView INHERITED;
-};
+        virtual void onDrawContent(SkCanvas* canvas)
+            {
+            SkPaint paint;
+
+            paint.setAntiAlias(true);
+            paint.setStyle(SkPaint::kStroke_Style);
+            paint.setStrokeWidth(SkIntToScalar(10));
+            paint.setMaskFilter(new SkEmbossMaskFilter(fLight, SkIntToScalar(4)))->unref();
+            paint.setShader(new SkColorShader(SK_ColorBLUE))->unref();
+            paint.setDither(true);
+
+            canvas->drawCircle(SkIntToScalar(50), SkIntToScalar(50),
+                               SkIntToScalar(30), paint);
+            }
+
+    private:
+
+        typedef SampleView INHERITED;
+    };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new EmbossView; }
+static SkView* MyFactory()
+    {
+    return new EmbossView;
+    }
 static SkViewRegister reg(MyFactory);
 

@@ -27,59 +27,67 @@
 #include "SkStream.h"
 #include "SkXMLParser.h"
 
-class PointsView : public SampleView {
-public:
-	PointsView() {}
+class PointsView : public SampleView
+    {
+    public:
+        PointsView() {}
 
-protected:
-    // overrides from SkEventSink
-    virtual bool onQuery(SkEvent* evt) {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "Points");
-            return true;
-        }
-        return this->INHERITED::onQuery(evt);
-    }
+    protected:
+        // overrides from SkEventSink
+        virtual bool onQuery(SkEvent* evt)
+            {
+            if (SampleCode::TitleQ(*evt))
+                {
+                SampleCode::TitleR(evt, "Points");
+                return true;
+                }
+            return this->INHERITED::onQuery(evt);
+            }
 
-    static void fill_pts(SkPoint pts[], size_t n, SkRandom* rand) {
-        for (size_t i = 0; i < n; i++)
-            pts[i].set(rand->nextUScalar1() * 640, rand->nextUScalar1() * 480);
-    }
+        static void fill_pts(SkPoint pts[], size_t n, SkRandom* rand)
+            {
+            for (size_t i = 0; i < n; i++)
+                pts[i].set(rand->nextUScalar1() * 640, rand->nextUScalar1() * 480);
+            }
 
-    virtual void onDrawContent(SkCanvas* canvas) {
-        canvas->translate(SK_Scalar1, SK_Scalar1);
+        virtual void onDrawContent(SkCanvas* canvas)
+            {
+            canvas->translate(SK_Scalar1, SK_Scalar1);
 
-        SkRandom rand;
-        SkPaint  p0, p1, p2, p3;
-        const size_t n = 99;
+            SkRandom rand;
+            SkPaint  p0, p1, p2, p3;
+            const size_t n = 99;
 
-        p0.setColor(SK_ColorRED);
-        p1.setColor(SK_ColorGREEN);
-        p2.setColor(SK_ColorBLUE);
-        p3.setColor(SK_ColorWHITE);
+            p0.setColor(SK_ColorRED);
+            p1.setColor(SK_ColorGREEN);
+            p2.setColor(SK_ColorBLUE);
+            p3.setColor(SK_ColorWHITE);
 
-        p0.setStrokeWidth(SkIntToScalar(4));
-        p2.setStrokeCap(SkPaint::kRound_Cap);
-        p2.setStrokeWidth(SkIntToScalar(6));
+            p0.setStrokeWidth(SkIntToScalar(4));
+            p2.setStrokeCap(SkPaint::kRound_Cap);
+            p2.setStrokeWidth(SkIntToScalar(6));
 
-        SkPoint* pts = new SkPoint[n];
-        fill_pts(pts, n, &rand);
+            SkPoint* pts = new SkPoint[n];
+            fill_pts(pts, n, &rand);
 
-        canvas->drawPoints(SkCanvas::kPolygon_PointMode, n, pts, p0);
-        canvas->drawPoints(SkCanvas::kLines_PointMode, n, pts, p1);
-        canvas->drawPoints(SkCanvas::kPoints_PointMode, n, pts, p2);
-        canvas->drawPoints(SkCanvas::kPoints_PointMode, n, pts, p3);
+            canvas->drawPoints(SkCanvas::kPolygon_PointMode, n, pts, p0);
+            canvas->drawPoints(SkCanvas::kLines_PointMode, n, pts, p1);
+            canvas->drawPoints(SkCanvas::kPoints_PointMode, n, pts, p2);
+            canvas->drawPoints(SkCanvas::kPoints_PointMode, n, pts, p3);
 
-        delete[] pts;
-    }
+            delete[] pts;
+            }
 
-private:
+    private:
 
-    typedef SampleView INHERITED;
-};
+        typedef SampleView INHERITED;
+    };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new PointsView; }
+static SkView* MyFactory()
+    {
+    return new PointsView;
+    }
 static SkViewRegister reg(MyFactory);
 

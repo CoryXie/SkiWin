@@ -24,7 +24,7 @@
 #include "SkTypeface.h"
 
 static SkShader* make_bitmapfade(const SkBitmap& bm)
-{
+    {
     SkPoint pts[2];
     SkColor colors[2];
 
@@ -45,97 +45,108 @@ static SkShader* make_bitmapfade(const SkBitmap& bm)
     mode->unref();
 
     return shader;
-}
-
-class ShaderView : public SampleView {
-public:
-    SkShader*   fShader;
-    SkBitmap    fBitmap;
-
-	ShaderView() {
-        SkImageDecoder::DecodeFile("/skimages/logo.gif", &fBitmap);
-
-        SkPoint pts[2];
-        SkColor colors[2];
-
-        pts[0].set(0, 0);
-        pts[1].set(SkIntToScalar(100), 0);
-        colors[0] = SK_ColorRED;
-        colors[1] = SK_ColorBLUE;
-        SkShader* shaderA = SkGradientShader::CreateLinear(pts, colors, NULL, 2, SkShader::kClamp_TileMode);
-
-        pts[0].set(0, 0);
-        pts[1].set(0, SkIntToScalar(100));
-        colors[0] = SK_ColorBLACK;
-        colors[1] = SkColorSetARGB(0x80, 0, 0, 0);
-        SkShader* shaderB = SkGradientShader::CreateLinear(pts, colors, NULL, 2, SkShader::kClamp_TileMode);
-
-        SkXfermode* mode = SkXfermode::Create(SkXfermode::kDstIn_Mode);
-
-        fShader = new SkComposeShader(shaderA, shaderB, mode);
-        shaderA->unref();
-        shaderB->unref();
-        mode->unref();
-    }
-    virtual ~ShaderView() {
-        SkSafeUnref(fShader);
     }
 
-protected:
-    // overrides from SkEventSink
-    virtual bool onQuery(SkEvent* evt) {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "Shaders");
-            return true;
-        }
-        return this->INHERITED::onQuery(evt);
-    }
+class ShaderView : public SampleView
+    {
+    public:
+        SkShader*   fShader;
+        SkBitmap    fBitmap;
 
-    virtual void onDrawContent(SkCanvas* canvas) {
-        canvas->drawBitmap(fBitmap, 0, 0);
+        ShaderView()
+            {
+            SkImageDecoder::DecodeFile("/skimages/logo.gif", &fBitmap);
 
-        canvas->translate(SkIntToScalar(20), SkIntToScalar(120));
+            SkPoint pts[2];
+            SkColor colors[2];
 
-        SkPaint paint;
-        SkRect  r;
+            pts[0].set(0, 0);
+            pts[1].set(SkIntToScalar(100), 0);
+            colors[0] = SK_ColorRED;
+            colors[1] = SK_ColorBLUE;
+            SkShader* shaderA = SkGradientShader::CreateLinear(pts, colors, NULL, 2, SkShader::kClamp_TileMode);
 
-        paint.setColor(SK_ColorGREEN);
-        canvas->drawRectCoords(0, 0, SkIntToScalar(100), SkIntToScalar(100), paint);
-        paint.setShader(fShader);
-        canvas->drawRectCoords(0, 0, SkIntToScalar(100), SkIntToScalar(100), paint);
+            pts[0].set(0, 0);
+            pts[1].set(0, SkIntToScalar(100));
+            colors[0] = SK_ColorBLACK;
+            colors[1] = SkColorSetARGB(0x80, 0, 0, 0);
+            SkShader* shaderB = SkGradientShader::CreateLinear(pts, colors, NULL, 2, SkShader::kClamp_TileMode);
 
-        canvas->translate(SkIntToScalar(110), 0);
+            SkXfermode* mode = SkXfermode::Create(SkXfermode::kDstIn_Mode);
 
-        int w = fBitmap.width();
-        int h = fBitmap.height();
-        w = 120;
-        h = 80;
-        r.set(0, 0, SkIntToScalar(w), SkIntToScalar(h));
+            fShader = new SkComposeShader(shaderA, shaderB, mode);
+            shaderA->unref();
+            shaderB->unref();
+            mode->unref();
+            }
+        virtual ~ShaderView()
+            {
+            SkSafeUnref(fShader);
+            }
 
-        paint.setShader(NULL);
-        canvas->drawRect(r, paint);
-        paint.setShader(make_bitmapfade(fBitmap))->unref();
-        canvas->drawRect(r, paint);
+    protected:
+        // overrides from SkEventSink
+        virtual bool onQuery(SkEvent* evt)
+            {
+            if (SampleCode::TitleQ(*evt))
+                {
+                SampleCode::TitleR(evt, "Shaders");
+                return true;
+                }
+            return this->INHERITED::onQuery(evt);
+            }
 
-        paint.setShader(new SkTransparentShader)->unref();
-        canvas->drawRect(r, paint);
-    }
+        virtual void onDrawContent(SkCanvas* canvas)
+            {
+            canvas->drawBitmap(fBitmap, 0, 0);
 
-    virtual SkView::Click* onFindClickHandler(SkScalar x, SkScalar y) {
-        this->inval(NULL);
-        return this->INHERITED::onFindClickHandler(x, y);
-    }
+            canvas->translate(SkIntToScalar(20), SkIntToScalar(120));
 
-    virtual bool onClick(Click* click) {
-        return this->INHERITED::onClick(click);
-    }
+            SkPaint paint;
+            SkRect  r;
 
-private:
-    typedef SampleView INHERITED;
-};
+            paint.setColor(SK_ColorGREEN);
+            canvas->drawRectCoords(0, 0, SkIntToScalar(100), SkIntToScalar(100), paint);
+            paint.setShader(fShader);
+            canvas->drawRectCoords(0, 0, SkIntToScalar(100), SkIntToScalar(100), paint);
+
+            canvas->translate(SkIntToScalar(110), 0);
+
+            int w = fBitmap.width();
+            int h = fBitmap.height();
+            w = 120;
+            h = 80;
+            r.set(0, 0, SkIntToScalar(w), SkIntToScalar(h));
+
+            paint.setShader(NULL);
+            canvas->drawRect(r, paint);
+            paint.setShader(make_bitmapfade(fBitmap))->unref();
+            canvas->drawRect(r, paint);
+
+            paint.setShader(new SkTransparentShader)->unref();
+            canvas->drawRect(r, paint);
+            }
+
+        virtual SkView::Click* onFindClickHandler(SkScalar x, SkScalar y)
+            {
+            this->inval(NULL);
+            return this->INHERITED::onFindClickHandler(x, y);
+            }
+
+        virtual bool onClick(Click* click)
+            {
+            return this->INHERITED::onClick(click);
+            }
+
+    private:
+        typedef SampleView INHERITED;
+    };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new ShaderView; }
+static SkView* MyFactory()
+    {
+    return new ShaderView;
+    }
 static SkViewRegister reg(MyFactory);
 

@@ -3,21 +3,22 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES:= \
 	main.cpp \
+	SkiWinView.cpp \
+	SkiWinEventListener.cpp \
 	SkiWin.cpp \
-        SkiWinInputEventReceiver.cpp \
-        SkiWinMessageQueue.cpp \
-#        SkiWinInputManagerService.cpp
 
 LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES -DEGL_EGLEXT_PROTOTYPES
 
 LOCAL_CFLAGS += -DUSE_RAW_EVENT_HUB
+
+LOCAL_CFLAGS += -std=gnu++0x
 
 LOCAL_SHARED_LIBRARIES := \
 	libcutils \
 	libandroidfw \
 	libutils \
 	libbinder \
-        libui \
+    libui \
 	libskia \
     libandroid_runtime \
     libEGL \
@@ -47,7 +48,6 @@ LOCAL_C_INCLUDES := \
     external/skia/src/core \
     external/skia/gpu/include \
     external/skia/include/animator \
-    frameworks/base/core/jni/android/graphics \
     frameworks/base/native/include/android \
     frameworks/native/services/surfaceflinger \
     frameworks/base/services\
