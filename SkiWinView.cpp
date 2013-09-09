@@ -71,6 +71,7 @@ SkiWinView::SkiWinView(sp<SurfaceComposerClient> & client,
     SurfaceComposerClient::openGlobalTransaction();
     mSurfaceControl->setLayer(mLayer);
     mSurfaceControl->setPosition(x, y);
+    mSurfaceControl->show();
     SurfaceComposerClient::closeGlobalTransaction();
     
     mSurface = mSurfaceControl->getSurface();
@@ -162,6 +163,8 @@ SkCanvas* SkiWinView::lockCanvas(const Rect& dirtyRect)
         // be safe with an empty bitmap.
         bitmap.setPixels(NULL);
         }
+    
+    bitmap.eraseARGB(0, 0, 0, 0);
 
     mCanvas.setBitmapDevice(bitmap);
 

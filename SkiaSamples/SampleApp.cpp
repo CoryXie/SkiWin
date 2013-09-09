@@ -2543,7 +2543,6 @@ static void test()
 
 SkOSWindow* create_sk_window(void* hwnd, int argc, char** argv)
     {
-//test();
     return new SampleWindow(hwnd, argc, argv, NULL);
     }
 

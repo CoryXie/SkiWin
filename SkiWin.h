@@ -62,19 +62,9 @@ class SkiWin : public Thread, public IBinder::DeathRecipient
     public:
         SkiWin();
         virtual     ~SkiWin();
-
-        sp<SurfaceComposerClient> session() const;
-
-        struct TouchEvent
-            {
-            enum TouchEventType
-                {
-                Down, Up, Moving
-                };
-            int32_t x;
-            int32_t y;
-            enum TouchEventType type;
-            };
+        
+        SkOSWindow* mWindowTop;
+        SkOSWindow* mWindowBot;
 
     private:
         virtual bool        threadLoop();
@@ -92,7 +82,10 @@ class SkiWin : public Thread, public IBinder::DeathRecipient
         int         mHeight;      
 
         sp<SkiWinView> mTitleView;
-        sp<SkiWinView> mContentView;
+        sp<SkiWinView> mContentViewTop;
+        sp<SkiWinView> mContentViewMid;
+        sp<SkiWinView> mContentViewBot;
+        
     };
 
 // ---------------------------------------------------------------------------

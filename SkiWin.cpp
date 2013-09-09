@@ -67,30 +67,75 @@ extern "C" int clock_nanosleep(clockid_t clock_id, int flags,
 namespace android
 {
 
-SkOSWindow* gWindow;
-
 // ---dd------------------------------------------------------------------------
 
 SkiWin::SkiWin() : Thread(false)
     {
-    mSession = new SurfaceComposerClient();
+    DisplayInfo dinfo;
     
+    sp<IBinder> dtoken(SurfaceComposerClient::getBuiltInDisplay(
+                           ISurfaceComposer::eDisplayIdMain));
+
+    status_t status = SurfaceComposerClient::getDisplayInfo(dtoken, &dinfo);
+
+    if (status)
+        {
+        printf("getDisplayInfo failed in %s\n", __PRETTY_FUNCTION__);
+
+        return;
+        }
+
+    mWidth = dinfo.w;
+    mHeight = dinfo.h;
+
+    mSession = new SurfaceComposerClient();
+
+    /*
+    |----------------------|
+    |    title view        | 30
+    |----------------------|
+    |                      |
+    |    content view top  | 150
+    |                      |
+    |----------------------|
+    |                      |
+    |    content view mid  | 150
+    |                      |
+    |----------------------|
+    |                      |
+    |    content view bot  | 150
+    |                      |
+    |----------------------|
+    */
     mTitleView = new SkiWinView(mSession, 
                    String8("TitleView"),
-                   0, 0, 320, 30, 0x30000000);
+                   0, 0, 320, 30, 0x40000000);
     
-    mContentView = new SkiWinView(mSession, 
-                   String8("ContentView"),
-                   0, 30, 320, 450, 0x40000000);
+    mContentViewTop = new SkiWinView(mSession, 
+                   String8("ContentViewTop"),
+                   0, 30, 320, 150, 0x40000001);
+
+    mContentViewMid = new SkiWinView(mSession, 
+                   String8("ContentViewMid"),
+                   0, 180, 320, 150, 0x40000002);
+
+    mContentViewBot = new SkiWinView(mSession, 
+                   String8("ContentViewBot"),
+                   0, 330, 320, 150, 0x40000003);
     
     application_init();
 
-    gWindow = create_sk_window(NULL, 0, 0);
+    mWindowTop = create_sk_window(NULL, 0, 0);
+    mWindowBot = create_sk_window(NULL, 0, 0);
     }
 
 SkiWin::~SkiWin()
     {
     mSession = NULL;
+    mTitleView = NULL;
+    mContentViewTop = NULL;
+    mContentViewMid = NULL;
+    mContentViewBot = NULL;
     }
 
 void SkiWin::onFirstRef()
@@ -106,12 +151,6 @@ void SkiWin::onFirstRef()
         run("SkiWin", PRIORITY_DISPLAY);
         }
     }
-
-sp<SurfaceComposerClient> SkiWin::session() const
-    {
-    return mSession;
-    }
-
 
 void SkiWin::binderDied(const wp<IBinder>& who)
     {
@@ -135,22 +174,28 @@ void SkiWinNotifyKeyCallback(const NotifyKeyArgs* args, void* context)
           args->action, args->flags, args->keyCode, args->scanCode,
           args->metaState, args->downTime);
 #endif
+    SkiWin* skiwin = reinterpret_cast<SkiWin*>(context);
+    SkOSWindow* mWindowTop = skiwin->mWindowTop;
+    SkOSWindow* mWindowBot = skiwin->mWindowBot;
+    
     if (args->action == AKEY_EVENT_ACTION_DOWN)
         {
-        gWindow->handleKey(AndroidKeycodeToSkKey(args->keyCode));
-        /* gWindow->handleChar((SkUnichar) uni); */
+        mWindowTop->handleKey(AndroidKeycodeToSkKey(args->keyCode));
+        /* mWindowTop->handleChar((SkUnichar) uni); */
+
+        mWindowBot->handleKey(AndroidKeycodeToSkKey(args->keyCode));
+        /* mWindowBot->handleChar((SkUnichar) uni); */
         }
     else if (args->action == AKEY_EVENT_ACTION_UP)
         {
-        gWindow->handleKeyUp(AndroidKeycodeToSkKey(args->keyCode));
+        mWindowTop->handleKeyUp(AndroidKeycodeToSkKey(args->keyCode));
+        mWindowBot->handleKeyUp(AndroidKeycodeToSkKey(args->keyCode));
         }
     }
 
 void SkiWinNotifyMotionCallback(const NotifyMotionArgs* args, void* context)
     {
 #if 0
-    printf("%s\n", __PRETTY_FUNCTION__);
-
     ALOGD("notifyMotion - eventTime=%lld, deviceId=%d, source=0x%x, policyFlags=0x%x, "
           "action=0x%x, flags=0x%x, metaState=0x%x, buttonState=0x%x, edgeFlags=0x%x, "
           "xPrecision=%f, yPrecision=%f, downTime=%lld",
@@ -178,6 +223,9 @@ void SkiWinNotifyMotionCallback(const NotifyMotionArgs* args, void* context)
 #endif
     int32_t x = int32_t(args->pointerCoords[0].getAxisValue(AMOTION_EVENT_AXIS_X));
     int32_t y = int32_t(args->pointerCoords[0].getAxisValue(AMOTION_EVENT_AXIS_Y));
+    SkiWin* skiwin = reinterpret_cast<SkiWin*>(context);
+    SkOSWindow* mWindowTop = skiwin->mWindowTop;
+    SkOSWindow* mWindowBot = skiwin->mWindowBot;
 
     SkView::Click::State state;
 
@@ -198,11 +246,14 @@ void SkiWinNotifyMotionCallback(const NotifyMotionArgs* args, void* context)
             return;
         }
 
-    gWindow->handleClick(x, y, state);
+    mWindowTop->handleClick(x, y, state);
+    mWindowBot->handleClick(x, y - 330, state);    
     }
 
 void SkiWinNotifySwitchCallback(const NotifySwitchArgs* args, void* context)
-    {
+    {    
+    SkiWin* skiwin = reinterpret_cast<SkiWin*>(context);
+    SkOSWindow* gWindow = skiwin->mWindowTop;
     printf("%s\n", __PRETTY_FUNCTION__);
     }
 
@@ -210,24 +261,6 @@ SkiWinEventCallback gInputEventCallback;
 
 status_t SkiWin::readyToRun()
     {
-
-    sp<IBinder> dtoken(SurfaceComposerClient::getBuiltInDisplay(
-                           ISurfaceComposer::eDisplayIdMain));
-
-    DisplayInfo dinfo;
-
-    status_t status = SurfaceComposerClient::getDisplayInfo(dtoken, &dinfo);
-
-    if (status)
-        {
-        printf("getDisplayInfo failed in %s\n", __PRETTY_FUNCTION__);
-
-        return -1;
-        }
-
-    mWidth = dinfo.w;
-    mHeight = dinfo.h;
-
     gInputEventCallback.pfNotifyKey = SkiWinNotifyKeyCallback;
     gInputEventCallback.pfNotifyMotion = SkiWinNotifyMotionCallback;
     gInputEventCallback.pfNotifySwitch = SkiWinNotifySwitchCallback;
@@ -236,7 +269,7 @@ status_t SkiWin::readyToRun()
     SkiWinInputConfiguration config =
         {
         touchPointerVisible : true,
-        touchPointerLayer : 0x40000001
+        touchPointerLayer : 0x40000005
         };
 
     SkiWinInputManagerInit(&gInputEventCallback, &config);
@@ -261,22 +294,26 @@ bool SkiWin::threadLoop()
 
 bool SkiWin::android()
     {
-
-    const nsecs_t startTime = systemTime();
+    SkCanvas* contentCanvasTop;
+    SkCanvas* contentCanvasMid;
+    SkCanvas* contentCanvasBot;
+    SkBitmap bitmap;
 
     Rect rect(mWidth, mHeight);
 
-    gWindow->resize(mWidth, mHeight);
-
+    mWindowTop->resize(320, 150);
+    mWindowBot->resize(320, 150);
+    
     do
         {
-        gWindow->update(NULL);
+        mWindowTop->update(NULL);
+        mWindowBot->update(NULL);
 
         SkCanvas* titileCanvas = mTitleView->lockCanvas(rect);
         if (titileCanvas)
             {
             SkPaint paint;
-            const char * title = gWindow->getTitle();
+            const char * title = mWindowTop->getTitle();
             
             paint.setColor(SK_ColorWHITE);
             paint.setDither(true);
@@ -290,13 +327,42 @@ bool SkiWin::android()
             titileCanvas->drawText(title, strlen(title), 15, 25, paint);
             }
         mTitleView->unlockCanvasAndPost();
-
-        SkCanvas* contentCanvas = mContentView->lockCanvas(rect);
-        if (contentCanvas)
+        
+        contentCanvasTop = mContentViewTop->lockCanvas(rect);
+        if (contentCanvasTop)
             {            
-            contentCanvas->drawBitmap(gWindow->getBitmap(), 0, 30);
+            contentCanvasTop->drawBitmap(mWindowTop->getBitmap(), 0, 30);
             }
-        mContentView->unlockCanvasAndPost();
+        mContentViewTop->unlockCanvasAndPost();
+        
+        contentCanvasMid = mContentViewMid->lockCanvas(rect);
+        if (contentCanvasMid)
+            {    
+            SkPaint paint;
+            int color = 0xff00ff77;
+            paint.setARGB(color>>24 & 0xff, 
+                          color>>16 & 0xff, 
+                          color>>8 & 0xff, 
+                          color & 0xff);
+            
+            SkRect rect1;
+            rect1.fLeft = 100;
+            rect1.fTop = 0;
+            rect1.fRight = 300;
+            rect1.fBottom = 120;
+
+            contentCanvasMid->drawRect(rect1, paint);         
+            //contentCanvasMid->drawBitmap(mWindowTop->getBitmap(), 0, 0);
+            contentCanvasMid->drawLine(100, 0, 100, 480, paint);
+            }
+        mContentViewMid->unlockCanvasAndPost();   
+
+        contentCanvasBot = mContentViewBot->lockCanvas(rect);
+        if (contentCanvasBot)
+            {            
+            contentCanvasBot->drawBitmap(mWindowBot->getBitmap(), 0, 0);
+            }
+        mContentViewBot->unlockCanvasAndPost(); 
 
         usleep(100000);        
 
