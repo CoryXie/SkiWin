@@ -177,6 +177,10 @@ void SkiWinNotifyKeyCallback(const NotifyKeyArgs* args, void* context)
     SkiWin* skiwin = reinterpret_cast<SkiWin*>(context);
     SkOSWindow* mWindowTop = skiwin->mWindowTop;
     SkOSWindow* mWindowBot = skiwin->mWindowBot;
+#if 0
+    printf("args->action %d %d\n", 
+        args->action, AndroidKeycodeToSkKey(args->keyCode));
+#endif
     
     if (args->action == AKEY_EVENT_ACTION_DOWN)
         {
@@ -245,9 +249,14 @@ void SkiWinNotifyMotionCallback(const NotifyMotionArgs* args, void* context)
             SkDebugf("motion event ignored\n");
             return;
         }
-
-    mWindowTop->handleClick(x, y, state);
-    mWindowBot->handleClick(x, y - 330, state);    
+    #if 0
+    printf("args->action %d (x,y) = (%d, %d)\n", args->action, x, y);
+    #endif
+    
+    if (y < 330)
+        mWindowTop->handleClick(x, y, state);
+    else
+        mWindowBot->handleClick(x, y - 330, state);    
     }
 
 void SkiWinNotifySwitchCallback(const NotifySwitchArgs* args, void* context)
