@@ -65,7 +65,10 @@ class SkiWin : public Thread, public IBinder::DeathRecipient
         
         SkOSWindow* mWindowTop;
         SkOSWindow* mWindowBot;
-
+        
+        sp<SkiWinView> updateFocusView(int x, int y);
+        sp<SkiWinView> getFocusView();
+        
     private:
         virtual bool        threadLoop();
         virtual status_t    readyToRun();
@@ -81,10 +84,14 @@ class SkiWin : public Thread, public IBinder::DeathRecipient
         int         mWidth;
         int         mHeight;      
 
-        sp<SkiWinView> mTitleView;
+        sp<SkiWinView> mTitleViewTop;
+        sp<SkiWinView> mTitleViewBot;
         sp<SkiWinView> mContentViewTop;
         sp<SkiWinView> mContentViewMid;
         sp<SkiWinView> mContentViewBot;
+
+        
+        sp<SkiWinView> mFocusView;
         
     };
 

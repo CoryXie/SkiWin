@@ -66,6 +66,13 @@ class SkiWinView : public RefBase
         void unlockCanvasAndPost();
         void clearView();
 
+        void screenToViewSpace (int x, int y, int *x0, int* y0);
+        void viewToScreenSpace (int x0, int y0, int *x, int* y);
+        
+        bool isFocus(int x, int y);
+        void setContext(void * ctx);
+        void * getContext();
+        
     private:
 
         SkBitmap::Config convertPixelFormat(PixelFormat format);
@@ -81,7 +88,9 @@ class SkiWinView : public RefBase
         int mTop;
         int mWidth;
         int mHeight;
-        int mLayer;        
+        int mLayer;    
+
+        void * mContext;
     };
 
 // ---------------------------------------------------------------------------

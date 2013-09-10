@@ -75,6 +75,8 @@ SkiWinView::SkiWinView(sp<SurfaceComposerClient> & client,
     SurfaceComposerClient::closeGlobalTransaction();
     
     mSurface = mSurfaceControl->getSurface();
+
+    mContext = NULL;
     }
 
 SkiWinView::~SkiWinView()
@@ -214,6 +216,36 @@ void SkiWinView::unlockCanvasAndPost()
     assert(err == 0);
     }
 
+bool SkiWinView::isFocus(int x, int y)
+    {
+    if ((x >= mLeft) && (x <= (mLeft + mWidth)) &&
+        (y >= mTop) && (y <= (mTop + mHeight)))
+        return true;
+    else
+        return false;
+    }
+
+void SkiWinView::setContext(void * ctx)
+    {
+    mContext = ctx;
+    }
+
+void* SkiWinView::getContext()
+    {
+    return mContext;
+    }
+
+void SkiWinView::screenToViewSpace (int x, int y, int *x0, int* y0)
+    {
+    *x0 = (x - mLeft);
+    *y0 = (y - mTop);
+    }
+
+void SkiWinView::viewToScreenSpace (int x0, int y0, int *x, int* y)
+    {
+    *x = (x0 + mLeft);
+    *y = (y0 + mTop);
+    }
 
 }; // namespace android
 
