@@ -1,0 +1,100 @@
+From 3c698eb8d4313f9aca2f3c62beed142f2aed741f Mon Sep 17 00:00:00 2001
+From: CoryXie <cory.xie@gmail.com>
+Date: Thu, 19 Sep 2013 23:08:23 +0800
+Subject: [PATCH] First support for SkiWin
+
+Change-Id: I3401b1e9680e301c89d1672976e12c4765256420
+---
+ include/pipe/SkGPipe.h   |  2 ++
+ src/gpu/gl/GrGLSL.cpp    |  2 +-
+ src/pdf/pdf_files.mk     | 15 +++++++++++++++
+ src/pipe/pipe_files.mk   |  4 ++++
+ src/views/views_files.mk |  9 ++++-----
+ 5 files changed, 26 insertions(+), 6 deletions(-)
+ create mode 100644 src/pdf/pdf_files.mk
+ create mode 100644 src/pipe/pipe_files.mk
+
+diff --git a/include/pipe/SkGPipe.h b/include/pipe/SkGPipe.h
+index 29b058e..f6bd13e 100644
+--- a/include/pipe/SkGPipe.h
++++ b/include/pipe/SkGPipe.h
+@@ -66,6 +66,8 @@ public:
+      *  bytes will always be a multiple of 4.
+      */
+     virtual void notifyWritten(size_t bytes) = 0;
++
++	virtual ~SkGPipeController() = 0;
+ };
+ 
+ class SkGPipeWriter {
+diff --git a/src/gpu/gl/GrGLSL.cpp b/src/gpu/gl/GrGLSL.cpp
+index e933ee8..94ebc6e 100644
+--- a/src/gpu/gl/GrGLSL.cpp
++++ b/src/gpu/gl/GrGLSL.cpp
+@@ -26,7 +26,7 @@ GrGLSLGeneration GrGetGLSLGeneration(GrGLBinding binding,
+             GrAssert(ver >= GR_GL_VER(1,00));
+             return k110_GrGLSLGeneration;
+         default:
+-            GrCrash("Unknown GL Binding");
++            /*GrCrash("Unknown GL Binding");*/
+             return k110_GrGLSLGeneration; // suppress warning
+     }
+ }
+diff --git a/src/pdf/pdf_files.mk b/src/pdf/pdf_files.mk
+new file mode 100644
+index 0000000..cd37fda
+--- /dev/null
++++ b/src/pdf/pdf_files.mk
+@@ -0,0 +1,15 @@
++SOURCE := \
++	SkBitSet.cpp \
++    SkPDFDevice.cpp \
++    SkPDFFont.cpp \
++    SkPDFGraphicState.cpp  \
++	SkPDFPage.cpp    \
++	SkPDFStream.cpp  \
++	SkPDFUtils.cpp	\
++	SkPDFCatalog.cpp  \
++	SkPDFDocument.cpp  \
++	SkPDFFormXObject.cpp  \
++	SkPDFImage.cpp         \
++	SkPDFShader.cpp  \
++	SkPDFTypes.cpp
++
+diff --git a/src/pipe/pipe_files.mk b/src/pipe/pipe_files.mk
+new file mode 100644
+index 0000000..4f6f6f4
+--- /dev/null
++++ b/src/pipe/pipe_files.mk
+@@ -0,0 +1,4 @@
++SOURCE := \
++	SkGPipeRead.cpp \
++    SkGPipeWrite.cpp 
++
+diff --git a/src/views/views_files.mk b/src/views/views_files.mk
+index 9c5e9e0..ca95e92 100644
+--- a/src/views/views_files.mk
++++ b/src/views/views_files.mk
+@@ -6,9 +6,7 @@ SOURCE := \
+     SkView.cpp \
+     SkViewPriv.cpp \
+     SkWindow.cpp \
+-    SkTouchGesture.cpp
+-#    SkBGViewArtist.cpp \
+-    SkMetaData.cpp \
++    SkTouchGesture.cpp \
+     SkListView.cpp \
+     SkListWidget.cpp \
+     SkParsePaint.cpp \
+@@ -22,5 +20,6 @@ SOURCE := \
+     SkWidget.cpp \
+     SkWidgetViews.cpp \
+     SkWidgets.cpp \
+-#    SkBorderView.cpp \
+-#    SkImageView.cpp \
++    SkBorderView.cpp \
++    SkImageView.cpp \
++    SkBGViewArtist.cpp \
+-- 
+1.8.1.2
+
