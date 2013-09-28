@@ -40,13 +40,18 @@
 #include <SkCanvas.h>
 #include <SkBitmap.h>
 #include <SkRegion.h>
+#include "SkTextBox.h"
+#include "SkShader.h"
 #include <SkiaSamples/SampleApp.h>
 
 #include "SkiWinEventListener.h"
 #include "SkiWinView.h"
 
+extern char * SkiWinURLResourceGet(const char * url, size_t * bufferLen);
+
 class SkBitmap;
 class SkCanvas;
+class SkTextBox;
 
 namespace android
 {
@@ -64,6 +69,7 @@ class SkiWin : public Thread, public IBinder::DeathRecipient
         virtual     ~SkiWin();
         
         SkOSWindow* mWindowTop;
+        SkOSWindow* mWindowMid;
         SkOSWindow* mWindowBot;
         
         sp<SkiWinView> updateFocusView(int x, int y);
@@ -74,6 +80,11 @@ class SkiWin : public Thread, public IBinder::DeathRecipient
         virtual status_t    readyToRun();
         virtual void        onFirstRef();
         virtual void        binderDied(const wp<IBinder>& who);
+        void drawText(SkCanvas* canvas, 
+                      SkScalar w, SkScalar h, 
+                      SkColor fg, SkColor bg,
+                      const char text[]);
+        void drawImage(SkCanvas* canvas, const void* buffer, size_t size);
 
         bool android();
 

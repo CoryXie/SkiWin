@@ -6,12 +6,13 @@ LOCAL_SRC_FILES:= \
 	SkiWinView.cpp \
 	SkiWinEventListener.cpp \
 	SkiWin.cpp \
+	SkiWinURLResource.cpp
 
 LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES -DEGL_EGLEXT_PROTOTYPES
 
-LOCAL_CFLAGS += -DUSE_RAW_EVENT_HUB
+#LOCAL_CFLAGS += -DUSE_RAW_EVENT_HUB
 
-LOCAL_CFLAGS += -std=gnu++0x
+LOCAL_CFLAGS += -std=gnu++0x -Wno-non-virtual-dtor
 
 LOCAL_SHARED_LIBRARIES := \
 	libcutils \
@@ -26,10 +27,13 @@ LOCAL_SHARED_LIBRARIES := \
     libGLESv1_CM \
     libgui \
     libinput \
-    libandroid_servers
+    libandroid_servers \
+	libstlport \
+	libcurl
+	
 
 LOCAL_STATIC_LIBRARIES := \
-    libskiagpu
+    libskiagpu 
 
 
 LOCAL_C_INCLUDES := \
@@ -51,7 +55,14 @@ LOCAL_C_INCLUDES := \
     frameworks/base/native/include/android \
     frameworks/native/services/surfaceflinger \
     frameworks/base/services\
-    SkiaSamples
+    SkiaSamples \
+	external/chromium/googleurl/src \
+	external/chromium \
+	external/chromium/android \
+	external/stlport/stlport \
+	external/curl/include \
+	bionic/libstdc++/include \
+	bionic 
 
 LOCAL_MODULE:= SkiWin
 

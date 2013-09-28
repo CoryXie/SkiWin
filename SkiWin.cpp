@@ -131,9 +131,13 @@ SkiWin::SkiWin() : Thread(false)
     application_init();
 
     mWindowTop = create_sk_window(NULL, 0, 0);
+    mWindowMid = create_sk_window(NULL, 0, 0);
     mWindowBot = create_sk_window(NULL, 0, 0);
-
+    
+    loadSampleByTitle(mWindowMid,"TextBox");
+        
     mContentViewTop->setContext(reinterpret_cast<void *>(mWindowTop));
+    mContentViewMid->setContext(reinterpret_cast<void *>(mWindowMid));    
     mContentViewBot->setContext(reinterpret_cast<void *>(mWindowBot));
     }
 
@@ -323,6 +327,73 @@ bool SkiWin::threadLoop()
     return r;
     }
 
+static const char gText[] =
+    "When in the Course of human events it becomes necessary for one people "
+    "to dissolve the political bands which have connected them with another "
+    "and to assume among the powers of the earth, the separate and equal "
+    "station to which the Laws of Nature and of Nature's God entitle them, "
+    "a decent respect to the opinions of mankind requires that they should "
+    "declare the causes which impel them to the separation.";
+
+void SkiWin::drawImage(SkCanvas* canvas, const void* buffer, size_t size)
+    {
+    SkBitmap bitmap;
+    SkPaint paint;
+    SkRect r;
+    SkMatrix m;
+
+    SkImageDecoder::DecodeMemory(buffer, size, &bitmap);
+    if (!bitmap.pixelRef())
+        {
+        return;
+        }
+
+    SkShader* s = SkShader::CreateBitmapShader(bitmap,
+                  SkShader::kRepeat_TileMode,
+                  SkShader::kRepeat_TileMode);
+    paint.setShader(s)->unref();
+    m.setTranslate(SkIntToScalar(250), SkIntToScalar(134));
+    s->setLocalMatrix(m);
+
+    r.set(SkIntToScalar(250),
+          SkIntToScalar(134),
+          SkIntToScalar(250 + 449),
+          SkIntToScalar(134 + 701));
+    paint.setFlags(2);
+
+    canvas->drawBitmap(bitmap, 0, 0, &paint);
+    }
+
+void SkiWin::drawText(SkCanvas* canvas, 
+                      SkScalar w, SkScalar h, 
+                      SkColor fg, SkColor bg,
+                      const char text[])
+    {
+    SkAutoCanvasRestore acr(canvas, true);
+
+    canvas->clipRect(SkRect::MakeWH(w, h));
+    canvas->drawColor(bg);
+    SkScalar margin = 20;
+    SkTextBox tbox;
+    tbox.setMode(SkTextBox::kLineBreak_Mode);
+    tbox.setBox(margin, margin,
+                w - margin, h - margin);
+    tbox.setSpacing(SkIntToScalar(3)/3, 0);
+
+    SkPaint paint;
+    paint.setAntiAlias(true);
+    paint.setLCDRenderText(true);
+    paint.setColor(fg);
+    tbox.setText(text, strlen(text), paint);
+
+    for (int i = 9; i < 24; i += 2)
+        {
+        paint.setTextSize(SkIntToScalar(i));
+        tbox.draw(canvas);
+        canvas->translate(0, tbox.getTextHeight() + paint.getFontSpacing());
+        }
+    }
+
 bool SkiWin::android()
     {
     SkCanvas* contentCanvasTop;
@@ -331,12 +402,23 @@ bool SkiWin::android()
     SkCanvas* titileCanvasTop;
     SkCanvas* titileCanvasBot;
     SkBitmap bitmap;
-
+    size_t  bufferLen;
+    char * buffer;
+    size_t  imgBufLen;
+    char * imgBuf;
     Rect rect(mWidth, mHeight);
 
     mWindowTop->resize(320, 150);
+    mWindowMid->resize(320, 150);
     mWindowBot->resize(320, 150);
+    mWindowMid->update(NULL);
     
+    buffer = SkiWinURLResourceGet("www.baidu.com", &bufferLen);
+    
+    if (buffer == NULL) buffer = (char *)gText;
+
+    imgBuf = SkiWinURLResourceGet("www.baidu.com/img/bdlogo.gif", &imgBufLen);
+
     do
         {
         mWindowTop->update(NULL);
@@ -384,9 +466,10 @@ bool SkiWin::android()
             rect1.fRight = 300;
             rect1.fBottom = 120;
 
-            contentCanvasMid->drawRect(rect1, paint);         
-            //contentCanvasMid->drawBitmap(mWindowTop->getBitmap(), 0, 0);
-            contentCanvasMid->drawLine(100, 0, 100, 480, paint);
+            //contentCanvasMid->drawRect(rect1, paint);         
+            //contentCanvasMid->drawBitmap(mWindowMid->getBitmap(), 0, 0);
+            //contentCanvasMid->drawLine(100, 0, 100, 480, paint);
+            drawText(contentCanvasMid, 320, 150, SK_ColorBLACK, SK_ColorWHITE, buffer);
             }
         mContentViewMid->unlockCanvasAndPost();   
 
@@ -426,7 +509,10 @@ bool SkiWin::android()
         contentCanvasBot = mContentViewBot->lockCanvas(rect);
         if (contentCanvasBot)
             {            
-            contentCanvasBot->drawBitmap(mWindowBot->getBitmap(), 0, 0);
+            if (imgBuf == NULL)
+                contentCanvasBot->drawBitmap(mWindowBot->getBitmap(), 0, 0);
+            else
+                drawImage(contentCanvasBot, imgBuf, imgBufLen);
             }
         mContentViewBot->unlockCanvasAndPost(); 
 

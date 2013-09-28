@@ -108,6 +108,7 @@ class SampleWindow : public SkOSWindow
             return fPDFData;
             }
         void postInvalDelay();
+        int findByTitle(const char*);
 
     protected:
         virtual void onDraw(SkCanvas* canvas);
@@ -198,7 +199,6 @@ class SampleWindow : public SkOSWindow
         void updateMatrix();
         void postAnimatingEvent();
         void installDrawFilter(SkCanvas*);
-        int findByTitle(const char*);
 
         typedef SkOSWindow INHERITED;
     };
@@ -208,5 +208,6 @@ extern void application_init();
 extern void application_term();
 extern void loadSample(SkOSWindow* win, int i);
 extern int getSampleCount(SkOSWindow* win);
+extern bool loadSampleByTitle(SkOSWindow* win, const char *title);
 
 #endif

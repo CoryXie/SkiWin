@@ -48,8 +48,45 @@
 
 #include "SkiWin.h"
 
-using namespace android;
+#include "net/base/host_resolver.h"
+#include "googleurl/src/url_util.h"
+#include "chrome/common/net/url_fetcher.h"
 
+using namespace android;
+#if 0
+class WebURLFetcher : public URLFetcher::Delegate
+{
+public:
+	WebURLFetcher(){id = 0;};
+	
+    // This will be called when the URL has been fetched, successfully or not.
+    // |response_code| is the HTTP response code (200, 404, etc.) if
+    // applicable.  |url|, |status| and |data| are all valid until the
+    // URLFetcher instance is destroyed.
+    void OnURLFetchComplete(const URLFetcher* source,
+                                    const GURL& url,
+                                    const net::URLRequestStatus& status,
+                                    int response_code,
+                                    const ResponseCookies& cookies,
+                                    const std::string& data) 
+	{
+	printf("OnURLFetchComplete\n");
+	}
+
+void GetURL(std::string &url)
+	{
+	// To use this class, create an instance with the desired URL and a pointer to
+	// the object to be notified when the URL has been loaded:
+
+    URLFetcher* fetcher = URLFetcher::Create(id++, GURL(url),
+                                        URLFetcher::GET, this);
+	fetcher->Start();
+	}
+
+private:
+	int id;
+};
+#endif
 
 ///////////////////////////////////////////
 /////////////// SkEvent impl //////////////
@@ -80,7 +117,7 @@ void SkOSWindow::onPDFSaved(const char title[], const char desc[],
     }
 
 // ---------------------------------------------------------------------------
-
+extern void WebURLTest();
 int main(int argc, char** argv)
     {
 #if defined(HAVE_PTHREADS)
@@ -89,6 +126,11 @@ int main(int argc, char** argv)
 
     sp<ProcessState> proc(ProcessState::self());
     ProcessState::self()->startThreadPool();
+	#if 0
+	WebURLFetcher web;
+	std::string url("http://www.google.com.hk");
+	web.GetURL(url);
+	#endif
 
     // create the SkiWin object
     sp<SkiWin> skiwin = new SkiWin();

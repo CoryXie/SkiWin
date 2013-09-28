@@ -2582,3 +2582,19 @@ void loadSample(SkOSWindow* win, int i)
     SampleWindow * sample = reinterpret_cast<SampleWindow * >(win);
     sample->goToSample(i);
     }
+
+bool loadSampleByTitle(SkOSWindow* win, const char *title)
+    {
+    SampleWindow * sample = reinterpret_cast<SampleWindow * >(win);
+    int i = sample->findByTitle(title);
+    
+    if (i >= 0) 
+        {
+        sample->goToSample(i);
+        return true;
+        }
+    else
+        {
+        return false;
+        }
+    }
