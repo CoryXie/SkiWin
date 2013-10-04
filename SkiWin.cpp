@@ -23,6 +23,7 @@
 #include <utils/misc.h>
 #include <signal.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include <cutils/properties.h>
 
@@ -49,6 +50,8 @@
 #include <core/SkBitmap.h>
 #include <core/SkStream.h>
 #include <images/SkImageDecoder.h>
+#include <images/SkImageRef_GlobalPool.h>
+#include <core/SkRefCnt.h>
 #include <utils/android/AndroidKeyToSkKey.h>
 
 #include <GLES/gl.h>
@@ -70,7 +73,7 @@ namespace android
 SkiWin::SkiWin() : Thread(false)
     {
     DisplayInfo dinfo;
-    
+
     sp<IBinder> dtoken(SurfaceComposerClient::getBuiltInDisplay(
                            ISurfaceComposer::eDisplayIdMain));
 
@@ -85,9 +88,9 @@ SkiWin::SkiWin() : Thread(false)
 
     mWidth = dinfo.w;
     mHeight = dinfo.h;
-    
+
     mFocusView = NULL;
-    
+
     mSession = new SurfaceComposerClient();
 
     /*
@@ -108,36 +111,36 @@ SkiWin::SkiWin() : Thread(false)
     |-----|----------------|
       70         250
     */
-    mTitleViewTop = new SkiWinView(mSession, 
-                   String8("TitleViewTop"),
-                   0, 0, 320, 30, 0x40000000);
-    
-    mContentViewTop = new SkiWinView(mSession, 
-                   String8("ContentViewTop"),
-                   0, 30, 320, 150, 0x40000001);
+    mTitleViewTop = new SkiWinView(mSession,
+                                   String8("TitleViewTop"),
+                                   0, 0, 320, 30, 0x40000000);
 
-    mContentViewMid = new SkiWinView(mSession, 
-                   String8("ContentViewMid"),
-                   0, 180, 320, 150, 0x40000002);
+    mContentViewTop = new SkiWinView(mSession,
+                                     String8("ContentViewTop"),
+                                     0, 30, 320, 150, 0x40000001);
 
-    mContentViewBot = new SkiWinView(mSession, 
-                   String8("ContentViewBot"),
-                   70, 330, 250, 150, 0x40000003);
+    mContentViewMid = new SkiWinView(mSession,
+                                     String8("ContentViewMid"),
+                                     0, 180, 320, 150, 0x40000002);
 
-    mTitleViewBot = new SkiWinView(mSession, 
-                   String8("TitleViewBot"),
-                   0, 330, 70, 150, 0x40000003);
-    
+    mContentViewBot = new SkiWinView(mSession,
+                                     String8("ContentViewBot"),
+                                     70, 330, 250, 150, 0x40000003);
+
+    mTitleViewBot = new SkiWinView(mSession,
+                                   String8("TitleViewBot"),
+                                   0, 330, 70, 150, 0x40000003);
+
     application_init();
 
     mWindowTop = create_sk_window(NULL, 0, 0);
     mWindowMid = create_sk_window(NULL, 0, 0);
     mWindowBot = create_sk_window(NULL, 0, 0);
-    
+
     loadSampleByTitle(mWindowMid,"TextBox");
-        
+
     mContentViewTop->setContext(reinterpret_cast<void *>(mWindowTop));
-    mContentViewMid->setContext(reinterpret_cast<void *>(mWindowMid));    
+    mContentViewMid->setContext(reinterpret_cast<void *>(mWindowMid));
     mContentViewBot->setContext(reinterpret_cast<void *>(mWindowBot));
     }
 
@@ -190,22 +193,22 @@ void SkiWinNotifyKeyCallback(const NotifyKeyArgs* args, void* context)
     SkOSWindow* mFocusWindow = NULL;
     sp<SkiWinView> mFocusView = NULL;
 #if 1
-    printf("KeyCallback args->action %d %d\n", 
-        args->action, AndroidKeycodeToSkKey(args->keyCode));
+    printf("KeyCallback args->action %d %d\n",
+           args->action, AndroidKeycodeToSkKey(args->keyCode));
 #endif
 
     mFocusView = skiwin->getFocusView();
 
     if (mFocusView != NULL)
         {
-        mFocusWindow = reinterpret_cast<SkOSWindow*>(mFocusView->getContext()); 
+        mFocusWindow = reinterpret_cast<SkOSWindow*>(mFocusView->getContext());
 
         if (mFocusWindow != NULL)
             {
             if (args->action == AKEY_EVENT_ACTION_DOWN)
                 {
                 mFocusWindow->handleKey(AndroidKeycodeToSkKey(args->keyCode));
-                /* mFocusWindow->handleChar((SkUnichar) uni); */ 
+                /* mFocusWindow->handleChar((SkUnichar) uni); */
                 }
             else if (args->action == AKEY_EVENT_ACTION_UP)
                 {
@@ -249,7 +252,7 @@ void SkiWinNotifyMotionCallback(const NotifyMotionArgs* args, void* context)
     SkOSWindow* mFocusWindow = NULL;
     sp<SkiWinView> mFocusView = NULL;
     int32_t x0, y0;
-    
+
     SkView::Click::State state;
 
     switch(args->action)
@@ -268,12 +271,12 @@ void SkiWinNotifyMotionCallback(const NotifyMotionArgs* args, void* context)
             SkDebugf("motion event ignored\n");
             return;
         }
-    #if 1
+#if 1
     printf("MotionCallback args->action %d (x,y) = (%d, %d)\n", args->action, x, y);
-    #endif
+#endif
 
     mFocusView = skiwin->updateFocusView (x, y);
-    
+
     if (mFocusView != NULL)
         {
         mFocusWindow = reinterpret_cast<SkOSWindow*>(mFocusView->getContext());
@@ -286,7 +289,7 @@ void SkiWinNotifyMotionCallback(const NotifyMotionArgs* args, void* context)
     }
 
 void SkiWinNotifySwitchCallback(const NotifySwitchArgs* args, void* context)
-    {    
+    {
     SkiWin* skiwin = reinterpret_cast<SkiWin*>(context);
     SkOSWindow* gWindow = skiwin->mWindowTop;
     printf("%s\n", __PRETTY_FUNCTION__);
@@ -303,7 +306,8 @@ status_t SkiWin::readyToRun()
 
     SkiWinInputConfiguration config =
         {
-        touchPointerVisible : true,
+touchPointerVisible :
+        true,
         touchPointerLayer : 0x40000005
         };
 
@@ -364,8 +368,8 @@ void SkiWin::drawImage(SkCanvas* canvas, const void* buffer, size_t size)
     canvas->drawBitmap(bitmap, 0, 0, &paint);
     }
 
-void SkiWin::drawText(SkCanvas* canvas, 
-                      SkScalar w, SkScalar h, 
+void SkiWin::drawText(SkCanvas* canvas,
+                      SkScalar w, SkScalar h,
                       SkColor fg, SkColor bg,
                       const char text[])
     {
@@ -394,6 +398,59 @@ void SkiWin::drawText(SkCanvas* canvas,
         }
     }
 
+/* This routine returns the size of the file it is called with. */
+int getFileSize(FILE *input)
+    {
+    int fileSizeBytes;
+    fseek(input, 0, SEEK_END);
+    fileSizeBytes = ftell(input);
+    fseek(input, 0, SEEK_SET);
+    return fileSizeBytes;
+    }
+
+/* This routine reads the entire file into memory. */
+
+char * readWholeFile (const char * file_name, size_t * size)
+    {
+    unsigned s;
+    char * contents;
+    FILE * f;
+    size_t bytes_read;
+    int status;
+
+    f = fopen (file_name, "rb");
+    if (! f)
+        {
+        fprintf (stderr, "Could not open '%s': %s.\n", file_name,
+                 strerror (errno));
+        exit (EXIT_FAILURE);
+        }
+    s = getFileSize(f);
+    contents = (char *)malloc (s + 1);
+    if (! contents)
+        {
+        fprintf (stderr, "Not enough memory.\n");
+        exit (EXIT_FAILURE);
+        }
+    bytes_read = fread (contents, sizeof (unsigned char), s, f);
+    if (bytes_read != s)
+        {
+        fprintf (stderr, "Short read of '%s': expected %d bytes "
+                 "but got %d: %s.\n", file_name, s, bytes_read,
+                 strerror (errno));
+        exit (EXIT_FAILURE);
+        }
+    status = fclose (f);
+    if (status != 0)
+        {
+        fprintf (stderr, "Error closing '%s': %s.\n", file_name,
+                 strerror (errno));
+        exit (EXIT_FAILURE);
+        }
+    *size = bytes_read;
+    return contents;
+    }
+
 bool SkiWin::android()
     {
     SkCanvas* contentCanvasTop;
@@ -406,15 +463,23 @@ bool SkiWin::android()
     char * buffer;
     size_t  imgBufLen;
     char * imgBuf;
+
+    int fileno = 0;
+    size_t  newScreenImgBufLen = 0;
+    size_t  screenImgBufLen = 0;
+    char * screenImgBuf = NULL;
+    char filename[50];
+    FILE *f;
+
     Rect rect(mWidth, mHeight);
 
     mWindowTop->resize(320, 150);
     mWindowMid->resize(320, 150);
     mWindowBot->resize(320, 150);
     mWindowMid->update(NULL);
-    
+
     buffer = SkiWinURLResourceGet("www.baidu.com", &bufferLen);
-    
+
     if (buffer == NULL) buffer = (char *)gText;
 
     imgBuf = SkiWinURLResourceGet("www.baidu.com/img/bdlogo.gif", &imgBufLen);
@@ -429,94 +494,112 @@ bool SkiWin::android()
             {
             SkPaint paint;
             const char * title = mWindowTop->getTitle();
-            
+
             paint.setColor(SK_ColorWHITE);
             paint.setDither(true);
             paint.setAntiAlias(true);
             paint.setSubpixelText(true);
             paint.setLCDRenderText(true);
             paint.setTextSize(15);
-                        
+
             titileCanvasTop->clear(SK_ColorBLACK);
-            
+
             titileCanvasTop->drawText(title, strlen(title), 15, 25, paint);
             }
         mTitleViewTop->unlockCanvasAndPost();
-        
+
         contentCanvasTop = mContentViewTop->lockCanvas(rect);
         if (contentCanvasTop)
-            {            
+            {
             contentCanvasTop->drawBitmap(mWindowTop->getBitmap(), 0, 30);
             }
         mContentViewTop->unlockCanvasAndPost();
-        
+
         contentCanvasMid = mContentViewMid->lockCanvas(rect);
         if (contentCanvasMid)
-            {    
+            {
             SkPaint paint;
             int color = 0xff00ff77;
-            paint.setARGB(color>>24 & 0xff, 
-                          color>>16 & 0xff, 
-                          color>>8 & 0xff, 
+            paint.setARGB(color>>24 & 0xff,
+                          color>>16 & 0xff,
+                          color>>8 & 0xff,
                           color & 0xff);
-            
+
             SkRect rect1;
             rect1.fLeft = 100;
             rect1.fTop = 0;
             rect1.fRight = 300;
             rect1.fBottom = 120;
 
-            //contentCanvasMid->drawRect(rect1, paint);         
+            //contentCanvasMid->drawRect(rect1, paint);
             //contentCanvasMid->drawBitmap(mWindowMid->getBitmap(), 0, 0);
             //contentCanvasMid->drawLine(100, 0, 100, 480, paint);
             drawText(contentCanvasMid, 320, 150, SK_ColorBLACK, SK_ColorWHITE, buffer);
             }
-        mContentViewMid->unlockCanvasAndPost();   
+        mContentViewMid->unlockCanvasAndPost();
 
         titileCanvasBot = mTitleViewBot->lockCanvas(rect);
         if (titileCanvasBot)
-           {
-           SkPaint paint;
-           int remain;
-           int ystart = 25;
-           const char * title = mWindowBot->getTitle();
-           
-           paint.setColor(SK_ColorWHITE);
-           paint.setDither(true);
-           paint.setAntiAlias(true);
-           paint.setSubpixelText(true);
-           paint.setLCDRenderText(true);
-           paint.setTextSize(10);
-                       
-           titileCanvasBot->clear(SK_ColorBLACK);
-           
-           remain = strlen(title);
-           
-           while (remain > 10)
-              {
-              titileCanvasBot->drawText(title, 10, 2, ystart, paint);
-              
-              title += 10;
-              ystart += 25;
-              remain -= 10;
-              }
-           
-           if (remain > 0)
-               titileCanvasBot->drawText(title, 10, 2, ystart, paint);
-           }
+            {
+#ifdef DRAW_TITLE
+            SkPaint paint;
+            int remain;
+            int ystart = 25;
+            const char * title = mWindowBot->getTitle();
+
+            paint.setColor(SK_ColorWHITE);
+            paint.setDither(true);
+            paint.setAntiAlias(true);
+            paint.setSubpixelText(true);
+            paint.setLCDRenderText(true);
+            paint.setTextSize(10);
+
+            titileCanvasBot->clear(SK_ColorBLACK);
+
+            remain = strlen(title);
+
+            while (remain > 10)
+                {
+                titileCanvasBot->drawText(title, 10, 2, ystart, paint);
+
+                title += 10;
+                ystart += 25;
+                remain -= 10;
+                }
+
+            if (remain > 0)
+                titileCanvasBot->drawText(title, 10, 2, ystart, paint);
+#else
+            {
+            sprintf(filename, "/mnt/sdcard/screen-%d.png", fileno++);
+            screenImgBuf = readWholeFile(filename, &screenImgBufLen);
+            if (screenImgBuf != NULL)
+                {
+
+                printf("Opened file %s with len %d buf %p\n", filename, screenImgBufLen, screenImgBuf);
+
+                drawImage(titileCanvasBot, screenImgBuf, screenImgBufLen);
+                
+                free(screenImgBuf);
+                }
+            else
+                fileno = 0;
+            }
+#endif
+            }
         mTitleViewBot->unlockCanvasAndPost();
 
         contentCanvasBot = mContentViewBot->lockCanvas(rect);
         if (contentCanvasBot)
-            {            
+            {
             if (imgBuf == NULL)
                 contentCanvasBot->drawBitmap(mWindowBot->getBitmap(), 0, 0);
             else
                 drawImage(contentCanvasBot, imgBuf, imgBufLen);
             }
-        mContentViewBot->unlockCanvasAndPost(); 
+        mContentViewBot->unlockCanvasAndPost();
 
-        usleep(100000);        
+        usleep(100000);
 
         checkExit();
         }
