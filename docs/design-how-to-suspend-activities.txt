@@ -1,3 +1,0 @@
-1. We need to find out the current running activities (some activities runs in the background, such as mp3 player). This information should be kept in a list.
-2. We need to suspend the current running activities.
-3. When resume, we need to resume the previous running activities.
