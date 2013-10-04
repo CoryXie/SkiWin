@@ -571,7 +571,7 @@ bool SkiWin::android()
                 titileCanvasBot->drawText(title, 10, 2, ystart, paint);
 #else
             {
-            sprintf(filename, "/mnt/sdcard/screen-%d.png", fileno++);
+            sprintf(filename, "/data/screenvideo/screen-%d.png", fileno++);
             screenImgBuf = readWholeFile(filename, &screenImgBufLen);
             if (screenImgBuf != NULL)
                 {
