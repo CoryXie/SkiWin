@@ -474,7 +474,7 @@ class FlagsDrawFilter : public SkDrawFilter
                         SkOSMenu::TriState hinting) :
             fLCDState(lcd), fAAState(aa), fFilterState(filter), fHintingState(hinting) {}
 
-        virtual bool filter(SkPaint* paint, Type t)
+        virtual void filter(SkPaint* paint, Type t)
             {
             if (kText_Type == t && SkOSMenu::kMixedState != fLCDState)
                 {
@@ -494,7 +494,6 @@ class FlagsDrawFilter : public SkDrawFilter
                                   SkPaint::kNormal_Hinting :
                                   SkPaint::kSlight_Hinting);
                 }
-			return true;
             }
 
     private:
