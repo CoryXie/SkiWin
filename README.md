@@ -5,7 +5,7 @@ Android Native Window System Based on Skia Samples.
 
 The following are the steps to build and run this.
 
-1. Installing Sun Java on Newer versions of Ubuntu (10.04 and above)
+1). Installing Sun Java on Newer versions of Ubuntu (10.04 and above)
 
 Open the terminal and type the following:
 
@@ -19,7 +19,7 @@ the following in case you have other java alternatives:
 sudo update-java-alternatives -s java-6-oracle  
 
 
-2. Installing required packages (Ubuntu 12.04 and above)
+2). Installing required packages (Ubuntu 12.04 and above)
 
 You will need a 64-bit version of Ubuntu. Ubuntu 12.04 is recommended. 
 
@@ -31,7 +31,7 @@ $ sudo apt-get install git gnupg flex bison gperf build-essential \
 $ sudo ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/i386-linux-gnu/libGL.so
 
 
-3. Get Sources
+3). Get Sources
 
 android@android:~/workspace/android$ mkdir coryxie;cd coryxie
 
@@ -43,7 +43,7 @@ android@android:~/workspace/android/coryxie$ cd ../external
 
 $ git clone https://github.com/CoryXie/AndroidCurlBuild.git curl
 
-4. Apply Patches
+4). Apply Patches
 
 android@android:~/workspace/android$ cd external/skia/
 android@android:~/workspace/android/external/skia$ patch -p1 < ../../coryxie/SkiWin/patches/0001-First-support-for-SkiWin.patch 
@@ -51,7 +51,7 @@ android@android:~/workspace/android/external/skia$ patch -p1 < ../../coryxie/Ski
 android@android:~/workspace/android$ cd system/core/rootdir/
 android@android:~/workspace/android/system/core/rootdir$ -p1 < ../../../coryxie/SkiWin/patches/0001-Enable-system-for-input-events.patch 
 
-5. Build
+5). Build
 
 $ make -j16
 
@@ -59,7 +59,7 @@ or in any sub-dir, do
 
 $ mm snod
 
-6. Run
+6). Run
 
 $ emulator&
 
