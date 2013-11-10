@@ -23,25 +23,25 @@ sudo update-java-alternatives -s java-6-oracle
 
 You will need a 64-bit version of Ubuntu. Ubuntu 12.04 is recommended. 
 
-# sudo apt-get install git gnupg flex bison gperf build-essential \
+$ sudo apt-get install git gnupg flex bison gperf build-essential \
   zip curl libc6-dev libncurses5-dev:i386 x11proto-core-dev \
   libx11-dev:i386 libreadline6-dev:i386 libgl1-mesa-glx:i386 \
   libgl1-mesa-dev g++-multilib mingw32 tofrodos \
   python-markdown libxml2-utils xsltproc zlib1g-dev:i386
-# sudo ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/i386-linux-gnu/libGL.so
+$ sudo ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/i386-linux-gnu/libGL.so
 
 
 3. Get Sources
 
 android@android:~/workspace/android$ mkdir coryxie;cd coryxie
 
-# git clone https://github.com/CoryXie/SkiWin.git
-# git clone https://github.com/CoryXie/SkiWinSwitcher.git
-# git clone https://github.com/CoryXie/ScreenVideo.git
+$ git clone https://github.com/CoryXie/SkiWin.git
+$ git clone https://github.com/CoryXie/SkiWinSwitcher.git
+$ git clone https://github.com/CoryXie/ScreenVideo.git
 
 android@android:~/workspace/android/coryxie$ cd ../external
 
-# git clone https://github.com/CoryXie/AndroidCurlBuild.git curl
+$ git clone https://github.com/CoryXie/AndroidCurlBuild.git curl
 
 4. Apply Patches
 
@@ -53,15 +53,15 @@ android@android:~/workspace/android/system/core/rootdir$ -p1 < ../../../coryxie/
 
 5. Build
 
-# make -j16
+$ make -j16
 
 or in any sub-dir, do 
 
-# mm snod
+$ mm snod
 
 6. Run
 
-# emulator&
+$ emulator&
 
 
 
