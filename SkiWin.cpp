@@ -62,7 +62,6 @@
 #include "SkiWinEventListener.h"
 #include "SkiWinView.h"
 
-#define LOGW printf
 extern "C" int clock_nanosleep(clockid_t clock_id, int flags,
                                const struct timespec *request,
                                struct timespec *remain);
@@ -182,7 +181,6 @@ void SkiWin::binderDied(const wp<IBinder>& who)
 void SkiWinNotifyKeyCallback(const NotifyKeyArgs* args, void* context)
     {
 #if 0
-    printf("%s\n", __PRETTY_FUNCTION__);
     ALOGD("notifyKey - eventTime=%lld, deviceId=%d, source=0x%x, policyFlags=0x%x, action=0x%x, "
           "flags=0x%x, keyCode=0x%x, scanCode=0x%x, metaState=0x%x, downTime=%lld",
           args->eventTime, args->deviceId, args->source, args->policyFlags,
@@ -199,6 +197,12 @@ void SkiWinNotifyKeyCallback(const NotifyKeyArgs* args, void* context)
 
     mFocusView = skiwin->getFocusView();
 
+	if (AKEYCODE_HOME == args->keyCode)
+		{
+		printf("AKEYCODE_HOME pressed, exiting!\n");
+		//exit(0);
+		}
+	
     if (mFocusView != NULL)
         {
         mFocusWindow = reinterpret_cast<SkOSWindow*>(mFocusView->getContext());
@@ -220,32 +224,6 @@ void SkiWinNotifyKeyCallback(const NotifyKeyArgs* args, void* context)
 
 void SkiWinNotifyMotionCallback(const NotifyMotionArgs* args, void* context)
     {
-#if 0
-    ALOGD("notifyMotion - eventTime=%lld, deviceId=%d, source=0x%x, policyFlags=0x%x, "
-          "action=0x%x, flags=0x%x, metaState=0x%x, buttonState=0x%x, edgeFlags=0x%x, "
-          "xPrecision=%f, yPrecision=%f, downTime=%lld",
-          args->eventTime, args->deviceId, args->source, args->policyFlags,
-          args->action, args->flags, args->metaState, args->buttonState,
-          args->edgeFlags, args->xPrecision, args->yPrecision, args->downTime);
-    for (uint32_t i = 0; i < args->pointerCount; i++)
-        {
-        ALOGD("  Pointer %d: id=%d, toolType=%d, "
-              "x=%f, y=%f, pressure=%f, size=%f, "
-              "touchMajor=%f, touchMinor=%f, toolMajor=%f, toolMinor=%f, "
-              "orientation=%f",
-              i, args->pointerProperties[i].id,
-              args->pointerProperties[i].toolType,
-              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_X),
-              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_Y),
-              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_PRESSURE),
-              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_SIZE),
-              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR),
-              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR),
-              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOOL_MAJOR),
-              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOOL_MINOR),
-              args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_ORIENTATION));
-        }
-#endif
     int32_t x = int32_t(args->pointerCoords[0].getAxisValue(AMOTION_EVENT_AXIS_X));
     int32_t y = int32_t(args->pointerCoords[0].getAxisValue(AMOTION_EVENT_AXIS_Y));
     SkiWin* skiwin = reinterpret_cast<SkiWin*>(context);
@@ -271,9 +249,6 @@ void SkiWinNotifyMotionCallback(const NotifyMotionArgs* args, void* context)
             SkDebugf("motion event ignored\n");
             return;
         }
-#if 1
-    printf("MotionCallback args->action %d (x,y) = (%d, %d)\n", args->action, x, y);
-#endif
 
     mFocusView = skiwin->updateFocusView (x, y);
 
@@ -306,8 +281,7 @@ status_t SkiWin::readyToRun()
 
     SkiWinInputConfiguration config =
         {
-touchPointerVisible :
-        true,
+		touchPointerVisible : true,
         touchPointerLayer : 0x40000005
         };
 

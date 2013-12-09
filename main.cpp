@@ -48,17 +48,28 @@
 
 #include "SkiWin.h"
 
+using namespace android;
+
+#undef WEB_URL_FETCHER_WORKING 
+
+/* 
+ * Enabling WEB_URL_FETCHER_WORKING won't work, due to the following link error:
+ * 
+ * error: undefined reference to 
+ * 'URLFetcher::URLFetcher(GURL const&, URLFetcher::RequestType, URLFetcher::Delegate*)'
+ *
+ * I have not found a solution to this! If this is solved, things would be much easier!
+ */
+#ifdef WEB_URL_FETCHER_WORKING
 #include "net/base/host_resolver.h"
 #include "googleurl/src/url_util.h"
 #include "chrome/common/net/url_fetcher.h"
 
-using namespace android;
-#if 0
 class WebURLFetcher : public URLFetcher::Delegate
 {
 public:
-	WebURLFetcher(){id = 0;};
-	
+    WebURLFetcher(){id = 0;};
+    
     // This will be called when the URL has been fetched, successfully or not.
     // |response_code| is the HTTP response code (200, 404, etc.) if
     // applicable.  |url|, |status| and |data| are all valid until the
@@ -69,24 +80,28 @@ public:
                                     int response_code,
                                     const ResponseCookies& cookies,
                                     const std::string& data) 
-	{
-	printf("OnURLFetchComplete\n");
-	}
+    {
+    printf("OnURLFetchComplete\n");
+    }
 
 void GetURL(std::string &url)
-	{
-	// To use this class, create an instance with the desired URL and a pointer to
-	// the object to be notified when the URL has been loaded:
-
+    {
+    // To use this class, create an instance with the desired URL and a pointer to
+    // the object to be notified when the URL has been loaded:
+#if 0
     URLFetcher* fetcher = URLFetcher::Create(id++, GURL(url),
                                         URLFetcher::GET, this);
-	fetcher->Start();
-	}
+#else
+    URLFetcher* fetcher = new URLFetcher(GURL(url),
+                                        URLFetcher::GET, this);
+#endif
+    fetcher->Start();
+    }
 
 private:
-	int id;
+    int id;
 };
-#endif
+#endif /* WEB_URL_FETCHER_WORKING */
 
 ///////////////////////////////////////////
 /////////////// SkEvent impl //////////////
@@ -126,11 +141,12 @@ int main(int argc, char** argv)
 
     sp<ProcessState> proc(ProcessState::self());
     ProcessState::self()->startThreadPool();
-	#if 0
-	WebURLFetcher web;
-	std::string url("http://www.google.com.hk");
-	web.GetURL(url);
-	#endif
+    
+    #ifdef WEB_URL_FETCHER_WORKING
+    WebURLFetcher web;
+    std::string url("http://www.google.com.hk");
+    web.GetURL(url);
+    #endif /* WEB_URL_FETCHER_WORKING */
 
     // create the SkiWin object
     sp<SkiWin> skiwin = new SkiWin();

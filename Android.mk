@@ -10,8 +10,6 @@ LOCAL_SRC_FILES:= \
 
 LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES -DEGL_EGLEXT_PROTOTYPES
 
-#LOCAL_CFLAGS += -DUSE_RAW_EVENT_HUB
-
 LOCAL_CFLAGS += -std=gnu++0x -Wno-non-virtual-dtor
 
 LOCAL_SHARED_LIBRARIES := \
@@ -19,43 +17,45 @@ LOCAL_SHARED_LIBRARIES := \
 	libandroidfw \
 	libutils \
 	libbinder \
-    libui \
+    	libui \
 	libskia \
-    libandroid_runtime \
-    libEGL \
-    libGLESv2 \
-    libGLESv1_CM \
-    libgui \
-    libinput \
-    libandroid_servers \
+	libandroid_runtime \
+	libEGL \
+	libGLESv2 \
+	libGLESv1_CM \
+	libgui \
+	libinput \
+	libandroid_servers \
 	libstlport \
-	libcurl
+	libcurl \
+	libchromium_net \
+	libwebcore
 	
 
 LOCAL_STATIC_LIBRARIES := \
-    libskiagpu 
+    	libskiagpu 
 
 
 LOCAL_C_INCLUDES := \
 	$(call include-path-for, corecg graphics) \
-    external/skia/include/core \
-    external/skia/include/config \
-    external/skia/include/effects \
-    external/skia/include/images \
-    external/skia/include/utils \
-    external/skia/include/utils/android \
-    external/skia/include/views \
-    external/skia/include/pdf \
-    external/skia/include/pipe \
-    external/skia/include/xml \
-    external/skia/include/gpu \
-    external/skia/src/core \
-    external/skia/gpu/include \
-    external/skia/include/animator \
-    frameworks/base/native/include/android \
-    frameworks/native/services/surfaceflinger \
-    frameworks/base/services\
-    SkiaSamples \
+	external/skia/include/core \
+	external/skia/include/config \
+	external/skia/include/effects \
+	external/skia/include/images \
+	external/skia/include/utils \
+	external/skia/include/utils/android \
+	external/skia/include/views \
+	external/skia/include/pdf \
+	external/skia/include/pipe \
+	external/skia/include/xml \
+	external/skia/include/gpu \
+	external/skia/src/core \
+	external/skia/gpu/include \
+	external/skia/include/animator \
+	frameworks/base/native/include/android \
+	frameworks/native/services/surfaceflinger \
+	frameworks/base/services\
+	SkiaSamples \
 	external/chromium/googleurl/src \
 	external/chromium \
 	external/chromium/android \
