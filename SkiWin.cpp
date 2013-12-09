@@ -197,12 +197,12 @@ void SkiWinNotifyKeyCallback(const NotifyKeyArgs* args, void* context)
 
     mFocusView = skiwin->getFocusView();
 
-	if (AKEYCODE_HOME == args->keyCode)
-		{
-		printf("AKEYCODE_HOME pressed, exiting!\n");
-		//exit(0);
-		}
-	
+    if (AKEYCODE_HOME == args->keyCode)
+        {
+        ALOGD("============@@@@@@@@@@@@@@@@@@@AKEYCODE_HOME pressed, exiting!\n");
+        exit(0);
+        }
+    
     if (mFocusView != NULL)
         {
         mFocusWindow = reinterpret_cast<SkOSWindow*>(mFocusView->getContext());
@@ -235,14 +235,14 @@ void SkiWinNotifyMotionCallback(const NotifyMotionArgs* args, void* context)
 
     switch(args->action)
         {
-        case AMOTION_EVENT_ACTION_DOWN:	   // MotionEvent.ACTION_DOWN
+        case AMOTION_EVENT_ACTION_DOWN:       // MotionEvent.ACTION_DOWN
             state = SkView::Click::kDown_State;
             break;
-        case AMOTION_EVENT_ACTION_UP:	   // MotionEvent.ACTION_UP
+        case AMOTION_EVENT_ACTION_UP:       // MotionEvent.ACTION_UP
         case AMOTION_EVENT_ACTION_CANCEL:  // MotionEvent.ACTION_CANCEL
             state = SkView::Click::kUp_State;
             break;
-        case AMOTION_EVENT_ACTION_MOVE:	   // MotionEvent.ACTION_MOVE
+        case AMOTION_EVENT_ACTION_MOVE:       // MotionEvent.ACTION_MOVE
             state = SkView::Click::kMoved_State;
             break;
         default:
@@ -281,7 +281,7 @@ status_t SkiWin::readyToRun()
 
     SkiWinInputConfiguration config =
         {
-		touchPointerVisible : true,
+        touchPointerVisible : true,
         touchPointerLayer : 0x40000005
         };
 
