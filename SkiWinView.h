@@ -72,6 +72,8 @@ class SkiWinView : public RefBase
         bool isFocus(int x, int y);
         void setContext(void * ctx);
         void * getContext();
+        void hide();
+        void show();
         
     private:
 

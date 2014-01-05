@@ -74,6 +74,8 @@ class SkiWin : public Thread, public IBinder::DeathRecipient
         
         sp<SkiWinView> updateFocusView(int x, int y);
         sp<SkiWinView> getFocusView();
+        void hide(void);
+        void show(void);
         
     private:
         virtual bool        threadLoop();

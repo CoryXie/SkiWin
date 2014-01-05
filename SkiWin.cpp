@@ -199,8 +199,8 @@ void SkiWinNotifyKeyCallback(const NotifyKeyArgs* args, void* context)
 
     if (AKEYCODE_HOME == args->keyCode)
         {
-        ALOGD("============@@@@@@@@@@@@@@@@@@@AKEYCODE_HOME pressed, exiting!\n");
-        exit(0);
+        ALOGD("============@@@@@@@@@@@@@@@@@@@AKEYCODE_HOME pressed, hiding!\n");
+        skiwin->hide();
         }
     
     if (mFocusView != NULL)
@@ -271,6 +271,17 @@ void SkiWinNotifySwitchCallback(const NotifySwitchArgs* args, void* context)
     }
 
 SkiWinEventCallback gInputEventCallback;
+SkiWin * gSkiWin;
+
+void sessionHandler (int signum) 
+    {
+    printf("Caught signal %d\n", signum);
+
+    if (signum == SIGCONT)
+        {
+        gSkiWin->show();
+        }
+    }
 
 status_t SkiWin::readyToRun()
     {
@@ -288,6 +299,12 @@ status_t SkiWin::readyToRun()
     SkiWinInputManagerInit(&gInputEventCallback, &config);
     SkiWinInputManagerStart();
 
+    gSkiWin = this;
+    
+    // Register signal and signal handler
+    //signal(SIGSTOP, sessionHandler);
+    signal(SIGCONT, sessionHandler);
+    
     return NO_ERROR;
     }
 
@@ -597,6 +614,24 @@ sp<SkiWinView> SkiWin::updateFocusView(int x, int y)
 sp<SkiWinView> SkiWin::getFocusView()
     {
     return mFocusView;
+    }
+
+void SkiWin::hide(void)
+    {
+    mTitleViewTop->hide();
+    mTitleViewBot->hide();
+    mContentViewTop->hide();
+    mContentViewMid->hide();
+    mContentViewBot->hide();
+    }
+
+void SkiWin::show(void)
+    {
+    mTitleViewTop->show();
+    mTitleViewBot->show();
+    mContentViewTop->show();
+    mContentViewMid->show();
+    mContentViewBot->show();
     }
 
 void SkiWin::checkExit()

@@ -93,6 +93,20 @@ void SkiWinView::clearView()
     SurfaceComposerClient::closeGlobalTransaction();
     }
 
+void SkiWinView::hide()
+    {
+    SurfaceComposerClient::openGlobalTransaction();
+    mSurfaceControl->hide();
+    SurfaceComposerClient::closeGlobalTransaction();
+    }
+
+void SkiWinView::show()
+    {
+    SurfaceComposerClient::openGlobalTransaction();
+    mSurfaceControl->show();
+    SurfaceComposerClient::closeGlobalTransaction();
+    }
+
 SkBitmap::Config SkiWinView::convertPixelFormat(PixelFormat format)
     {
     /* 
