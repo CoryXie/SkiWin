@@ -279,7 +279,8 @@ void sessionHandler (int signum)
 
     if (signum == SIGCONT)
         {
-        gSkiWin->show();
+        if (gSkiWin)
+            gSkiWin->show();
         }
     }
 
@@ -302,7 +303,6 @@ status_t SkiWin::readyToRun()
     gSkiWin = this;
     
     // Register signal and signal handler
-    //signal(SIGSTOP, sessionHandler);
     signal(SIGCONT, sessionHandler);
     
     return NO_ERROR;
@@ -414,14 +414,14 @@ char * readWholeFile (const char * file_name, size_t * size)
         {
         fprintf (stderr, "Could not open '%s': %s.\n", file_name,
                  strerror (errno));
-        exit (EXIT_FAILURE);
+        return NULL;
         }
     s = getFileSize(f);
     contents = (char *)malloc (s + 1);
     if (! contents)
         {
         fprintf (stderr, "Not enough memory.\n");
-        exit (EXIT_FAILURE);
+        return NULL;
         }
     bytes_read = fread (contents, sizeof (unsigned char), s, f);
     if (bytes_read != s)
@@ -429,14 +429,14 @@ char * readWholeFile (const char * file_name, size_t * size)
         fprintf (stderr, "Short read of '%s': expected %d bytes "
                  "but got %d: %s.\n", file_name, s, bytes_read,
                  strerror (errno));
-        exit (EXIT_FAILURE);
+        return NULL;
         }
     status = fclose (f);
     if (status != 0)
         {
         fprintf (stderr, "Error closing '%s': %s.\n", file_name,
                  strerror (errno));
-        exit (EXIT_FAILURE);
+        return NULL;
         }
     *size = bytes_read;
     return contents;
