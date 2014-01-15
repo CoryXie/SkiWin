@@ -64,7 +64,7 @@ class SkiWinView : public RefBase
 
         SkCanvas* lockCanvas(const Rect& dirtyRect);
         void unlockCanvasAndPost();
-        void clearView();
+        void clear();
 
         void screenToViewSpace (int x, int y, int *x0, int* y0);
         void viewToScreenSpace (int x0, int y0, int *x, int* y);

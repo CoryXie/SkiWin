@@ -86,7 +86,7 @@ SkiWinView::~SkiWinView()
     mSurface = NULL;
     }
 
-void SkiWinView::clearView()
+void SkiWinView::clear()
     {
     SurfaceComposerClient::openGlobalTransaction();
     mSurfaceControl->clear();

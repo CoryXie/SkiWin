@@ -202,6 +202,11 @@ void SkiWinNotifyKeyCallback(const NotifyKeyArgs* args, void* context)
         ALOGD("============@@@@@@@@@@@@@@@@@@@AKEYCODE_HOME pressed, hiding!\n");
         skiwin->hide();
         }
+    else if (AKEYCODE_BACK == args->keyCode)
+        {
+        ALOGD("============@@@@@@@@@@@@@@@@@@@AKEYCODE_BACK pressed, exiting!\n");
+        exit(0);
+        }
     
     if (mFocusView != NULL)
         {
@@ -532,51 +537,52 @@ bool SkiWin::android()
         titileCanvasBot = mTitleViewBot->lockCanvas(rect);
         if (titileCanvasBot)
             {
-#ifdef DRAW_TITLE
-            SkPaint paint;
-            int remain;
-            int ystart = 25;
-            const char * title = mWindowBot->getTitle();
-
-            paint.setColor(SK_ColorWHITE);
-            paint.setDither(true);
-            paint.setAntiAlias(true);
-            paint.setSubpixelText(true);
-            paint.setLCDRenderText(true);
-            paint.setTextSize(10);
-
-            titileCanvasBot->clear(SK_ColorBLACK);
-
-            remain = strlen(title);
-
-            while (remain > 10)
+            if (imgBuf == NULL)
                 {
-                titileCanvasBot->drawText(title, 10, 2, ystart, paint);
+                SkPaint paint;
+                int remain;
+                int ystart = 25;
+                const char * title = mWindowBot->getTitle();
 
-                title += 10;
-                ystart += 25;
-                remain -= 10;
-                }
+                paint.setColor(SK_ColorWHITE);
+                paint.setDither(true);
+                paint.setAntiAlias(true);
+                paint.setSubpixelText(true);
+                paint.setLCDRenderText(true);
+                paint.setTextSize(10);
 
-            if (remain > 0)
-                titileCanvasBot->drawText(title, 10, 2, ystart, paint);
-#else
-            {
-            sprintf(filename, "/data/screenvideo/screen-%d.png", fileno++);
-            screenImgBuf = readWholeFile(filename, &screenImgBufLen);
-            if (screenImgBuf != NULL)
-                {
+                titileCanvasBot->clear(SK_ColorBLACK);
 
-                printf("Opened file %s with len %d buf %p\n", filename, screenImgBufLen, screenImgBuf);
+                remain = strlen(title);
 
-                drawImage(titileCanvasBot, screenImgBuf, screenImgBufLen);
-                
-                free(screenImgBuf);
+                while (remain > 10)
+                    {
+                    titileCanvasBot->drawText(title, 10, 2, ystart, paint);
+
+                    title += 10;
+                    ystart += 25;
+                    remain -= 10;
+                    }
+
+                if (remain > 0)
+                    titileCanvasBot->drawText(title, 10, 2, ystart, paint);
                 }
             else
-                fileno = 0;
-            }
-#endif
+                {
+                sprintf(filename, "/data/screenvideo/screen-%d.png", fileno++);
+                screenImgBuf = readWholeFile(filename, &screenImgBufLen);
+                if (screenImgBuf != NULL)
+                    {
+
+                    printf("Opened file %s with len %d buf %p\n", filename, screenImgBufLen, screenImgBuf);
+
+                    drawImage(titileCanvasBot, screenImgBuf, screenImgBufLen);
+                    
+                    free(screenImgBuf);
+                    }
+                else
+                    fileno = 0;
+                }
             }
         mTitleViewBot->unlockCanvasAndPost();
 
