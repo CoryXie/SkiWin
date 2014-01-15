@@ -45,9 +45,7 @@ void SkiWinInputManagerInit(
     SkiWinEventCallback* gInputEventCallback,
     SkiWinInputConfiguration* configuration);
 
-void SkiWinInputManagerLoopOnce();
 void SkiWinInputManagerStart();
-void SkiWinInputManagerStartAndWait(bool* flag);
 void SkiWinInputManagerStop();
 void SkiWinInputManagerExit();
 }
